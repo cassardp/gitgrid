@@ -16,7 +16,7 @@ const LANG_COLORS = {
 
 const starSVG = `<svg class="star-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>`;
 
-const externalSVG = `<svg class="card-external" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 1.5H2.25A.75.75 0 001.5 2.25v7.5c0 .414.336.75.75.75h7.5a.75.75 0 00.75-.75V7.5M7.5 1.5h3m0 0v3m0-3L5.25 6.75"/></svg>`;
+const arrowSVG = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 11L11 3M11 3H5M11 3v6"/></svg>`;
 
 function setTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
@@ -29,14 +29,6 @@ function getRepoConfig(name) {
 function isExcluded(name) {
   const rc = getRepoConfig(name);
   return rc.hidden || (CONFIG.exclude && CONFIG.exclude.includes(name));
-}
-
-function getSize(repo) {
-  const rc = getRepoConfig(repo.name);
-  if (rc.size) return rc.size;
-  if (repo.stargazers_count >= 50) return "large";
-  if (repo.stargazers_count >= 10 || (repo.description && repo.description.length > 80)) return "medium";
-  return "small";
 }
 
 function sortRepos(repos) {
@@ -74,34 +66,31 @@ function escapeHTML(str) {
   return d.innerHTML;
 }
 
-function renderSidebar(user) {
-  const el = document.getElementById("sidebar");
-  const title = CONFIG.title || user.name || user.login;
-  const bio = CONFIG.showBio && user.bio
-    ? `<p class="sidebar-bio">${escapeHTML(user.bio)}</p>` : "";
+function renderHeader(user) {
+  const name = CONFIG.title || user.name || user.login;
+  const login = user.login;
 
-  const pills = [];
-  pills.push(`<a href="${user.html_url}" target="_blank">GitHub</a>`);
+  // Navbar links
+  const navLinks = [];
+  navLinks.push(`<a class="nav-link" href="${user.html_url}" target="_blank">GitHub</a>`);
   if (user.blog) {
     const url = user.blog.startsWith("http") ? user.blog : `https://${user.blog}`;
-    pills.push(`<a href="${url}" target="_blank">${user.blog.replace(/^https?:\/\//, "")}</a>`);
+    navLinks.push(`<a class="nav-link" href="${url}" target="_blank">Website</a>`);
   }
   if (user.twitter_username)
-    pills.push(`<a href="https://x.com/${user.twitter_username}" target="_blank">@${user.twitter_username}</a>`);
-  if (user.location)
-    pills.push(`<span>${escapeHTML(user.location)}</span>`);
+    navLinks.push(`<a class="nav-link" href="https://x.com/${user.twitter_username}" target="_blank">X</a>`);
 
   const devBtns = import.meta.env.DEV
     ? `<div class="dev-btns">
-        <button class="sync-btn" id="sync-btn" title="Sync from GitHub">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <button class="dev-btn" id="sync-btn" title="Sync from GitHub">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M1.5 8a6.5 6.5 0 0111.48-4.17M14.5 8a6.5 6.5 0 01-11.48 4.17"/>
             <path d="M13 1v3.5h-3.5M3 15v-3.5h3.5"/>
           </svg>
           Sync
         </button>
-        <button class="sync-btn" id="preview-btn" title="Preview production">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <button class="dev-btn" id="preview-btn" title="Preview production">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
@@ -110,14 +99,27 @@ function renderSidebar(user) {
        </div>`
     : "";
 
-  el.innerHTML = `
-    <img class="avatar" src="${user.avatar_url}" alt="${escapeHTML(title)}" />
-    <h1 class="sidebar-name">${escapeHTML(title)}</h1>
-    ${bio}
-    <div class="sidebar-links">${pills.join("")}</div>
-    ${devBtns}
+  // Navbar
+  document.getElementById("navbar").innerHTML = `
+    <div class="nav-left">
+      <a class="nav-back" href="${user.html_url}" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+      </a>
+    </div>
+    <div class="nav-center">${navLinks.join("")}</div>
+    <div class="nav-right">${devBtns}</div>
   `;
-  document.title = `${title} — Portfolio`;
+
+  // Page title — "Projects / Name"
+  document.getElementById("page-title").innerHTML = `
+    <h1 class="title">
+      <span class="title-prefix">Projects</span>
+      <span class="title-slash"> / </span>
+      <span class="title-name">${escapeHTML(name)}</span>
+    </h1>
+  `;
+
+  document.title = `${name} — Portfolio`;
 
   const btn = document.getElementById("sync-btn");
   if (btn) btn.addEventListener("click", handleSync);
@@ -127,52 +129,29 @@ function renderSidebar(user) {
 }
 
 function renderCard(repo, index) {
-  const size = getSize(repo);
-  const rc = getRepoConfig(repo.name);
   const link = getRepoLink(repo);
-  const hasScreenshot = !!rc.screenshot;
-  const langColor = LANG_COLORS[repo.language] || "#999";
-  const delay = Math.min(index * 0.04, 0.6);
-
-  const ext = hasExternalLink(repo) ? externalSVG : "";
+  const delay = Math.min(index * 0.03, 0.5);
 
   const lang = repo.language
-    ? `<span class="card-meta"><span class="lang-dot" style="background:${langColor}"></span>${repo.language}</span>`
-    : "";
+    ? `<span class="card-meta-item">${repo.language}</span>` : "";
 
   const stars = repo.stargazers_count > 0
-    ? `<span class="card-meta">${starSVG} ${repo.stargazers_count}</span>`
-    : "";
-
-  if (hasScreenshot) {
-    return `
-      <a class="card card-hero card-${size}"
-         href="${link}" target="_blank" rel="noopener"
-         data-repo="${escapeHTML(repo.name)}"
-         style="animation-delay:${delay}s">
-        <div class="card-img">
-          <img src="${rc.screenshot}" alt="${escapeHTML(repo.name)}" loading="lazy" />
-        </div>
-        <div class="card-bar">
-          <span class="card-bar-name">${escapeHTML(repo.name)}${ext}</span>
-          <div class="card-bar-meta">${lang}${stars}</div>
-        </div>
-      </a>`;
-  }
-
-  const desc = repo.description
-    ? `<div class="card-desc">${escapeHTML(repo.description)}</div>` : "";
+    ? `<span class="card-price">${starSVG} ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
   return `
-    <a class="card card-${size}"
+    <a class="card"
        href="${link}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s">
-      <div class="card-top">
-        <div class="card-name">${escapeHTML(repo.name)}${ext}</div>
-        ${desc}
+      <div class="card-arrow">${arrowSVG}</div>
+      <div class="card-image"></div>
+      <div class="card-footer">
+        ${lang}
+        <div class="card-title-row">
+          <span class="card-title">${escapeHTML(repo.name)}</span>
+          ${stars}
+        </div>
       </div>
-      <div class="card-bottom">${lang}${stars}</div>
     </a>`;
 }
 
@@ -212,7 +191,7 @@ async function handleSync() {
     const dataRes = await fetch("/data.json?t=" + Date.now());
     const data = await dataRes.json();
 
-    renderSidebar(data.user);
+    renderHeader(data.user);
     renderGrid(data.repos);
   } catch (err) {
     console.error("Sync failed:", err);
@@ -245,7 +224,7 @@ async function init() {
     if (!res.ok) throw new Error("data.json not found. Run: npm run sync");
     cachedData = await res.json();
 
-    renderSidebar(cachedData.user);
+    renderHeader(cachedData.user);
     await renderWithDevConfig(cachedData.repos);
   } catch (err) {
     document.getElementById("content").innerHTML =

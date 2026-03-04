@@ -67,7 +67,7 @@ async function main() {
 
   const data = {
     user: pickUserFields(user),
-    repos: repos.map(pickRepoFields),
+    repos: repos.filter(r => r.name !== username).map(pickRepoFields),
     synced_at: new Date().toISOString(),
   };
 

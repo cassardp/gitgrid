@@ -9,40 +9,25 @@ export default {
   repos: {
     cassardp: {
       hidden: false,
-      screenshot: "images/cassardp.png",
-      size: "small",
-      order: 1
+      size: "small"
     },
     gribli: {
-      size: "small",
-      screenshot: "images/gribli.png",
-      order: 5
+      size: "small"
     },
     Screan: {
-      size: "small",
-      screenshot: "images/gribli.png",
-      order: 2
+      size: "small"
     },
     Pinpin: {
-      size: "small",
-      screenshot: "images/gribli.png",
-      order: 3
+      size: "small"
     },
     Paaage: {
-      size: "small",
-      screenshot: "images/gribli.png",
-      order: 0
+      size: "small"
     },
     iconlab: {
-      size: "medium",
-      screenshot: "images/gribli.png",
-      order: 6
+      size: "medium"
     },
     gribli_web: {
       hidden: true
-    },
-    gitgrid: {
-      order: 4
     }
   }
 };

@@ -69,6 +69,8 @@ function syncPlugin() {
           const config = await readBody(req);
           const js = serialize(config);
           fs.writeFileSync(path.join(process.cwd(), "config.js"), js);
+          const mod = server.moduleGraph.getModuleByUrl("/config.js");
+          if (mod) server.moduleGraph.invalidateModule(mod);
           res.end(JSON.stringify({ ok: true }));
         } catch (e) {
           res.statusCode = 500;
