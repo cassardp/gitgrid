@@ -1,7 +1,12 @@
 let workingConfig = null;
 let saveTimer = null;
+let stylesInjected = false;
+let filteredRepos = null;
+let dragState = null;
 
 function injectStyles() {
+  if (stylesInjected) return;
+  stylesInjected = true;
   const style = document.createElement("style");
   style.textContent = `
     .card { position: relative; }
@@ -78,6 +83,12 @@ function injectStyles() {
       color: var(--bg);
       border-color: var(--text);
     }
+    .card.dev-drag-ghost {
+      border: 2px dashed #3b82f6 !important;
+      background: rgba(59, 130, 246, 0.06) !important;
+      box-shadow: none !important;
+    }
+    .card.dev-drag-ghost > * { visibility: hidden; }
   `;
   document.head.appendChild(style);
 }
@@ -144,6 +155,72 @@ function addOverlay(card, repo) {
   card.addEventListener("click", (e) => {
     if (e.target.closest(".dev-link")) return;
     e.preventDefault();
+  });
+
+  card.draggable = true;
+
+  card.addEventListener("dragstart", (e) => {
+    if (e.dataTransfer.types.includes("Files")) return;
+    e.dataTransfer.setData("text/plain", name);
+    e.dataTransfer.effectAllowed = "move";
+    dragState = { name, card, originalNext: card.nextSibling };
+    requestAnimationFrame(() => card.classList.add("dev-drag-ghost"));
+  });
+
+  card.addEventListener("dragend", () => {
+    if (!dragState) return;
+    dragState.card.classList.remove("dev-drag-ghost");
+    const grid = dragState.card.closest(".grid");
+    if (dragState.originalNext) {
+      grid.insertBefore(dragState.card, dragState.originalNext);
+    } else {
+      grid.appendChild(dragState.card);
+    }
+    dragState = null;
+  });
+
+  card.addEventListener("dragover", (e) => {
+    if (!dragState || !e.dataTransfer.types.includes("text/plain")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    if (dragState.name === name) return;
+
+    const rect = card.getBoundingClientRect();
+    const before = e.clientY < rect.top + rect.height / 2;
+    const grid = card.closest(".grid");
+
+    if (before) {
+      grid.insertBefore(dragState.card, card);
+    } else {
+      grid.insertBefore(dragState.card, card.nextSibling);
+    }
+  });
+
+  card.addEventListener("drop", (e) => {
+    if (!dragState || !e.dataTransfer.types.includes("text/plain")) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    dragState.card.classList.remove("dev-drag-ghost");
+
+    const grid = card.closest(".grid");
+    if (!grid || !filteredRepos) return;
+
+    const repoMap = new Map(filteredRepos.map((r) => [r.name, r]));
+    const domCards = grid.querySelectorAll("[data-repo]");
+    filteredRepos.length = 0;
+    domCards.forEach((c) => {
+      const repo = repoMap.get(c.dataset.repo);
+      if (repo) filteredRepos.push(repo);
+    });
+
+    filteredRepos.forEach((r, i) => {
+      getRC(r.name).order = i;
+    });
+    debouncedSave();
+
+    dragState = null;
   });
 
   const overlay = document.createElement("div");
@@ -217,19 +294,24 @@ function addOverlay(card, repo) {
 
   let dragCounter = 0;
   card.addEventListener("dragenter", (e) => {
+    if (!e.dataTransfer.types.includes("Files")) return;
     e.preventDefault();
     dragCounter++;
     card.classList.add("dev-dragover");
   });
-  card.addEventListener("dragleave", () => {
+  card.addEventListener("dragleave", (e) => {
+    if (!e.dataTransfer.types.includes("Files")) return;
     dragCounter--;
     if (dragCounter <= 0) {
       dragCounter = 0;
       card.classList.remove("dev-dragover");
     }
   });
-  card.addEventListener("dragover", (e) => e.preventDefault());
+  card.addEventListener("dragover", (e) => {
+    if (e.dataTransfer.types.includes("Files")) e.preventDefault();
+  });
   card.addEventListener("drop", (e) => {
+    if (!e.dataTransfer.types.includes("Files")) return;
     e.preventDefault();
     e.stopPropagation();
     dragCounter = 0;
@@ -240,7 +322,8 @@ function addOverlay(card, repo) {
 }
 
 export function initDevConfig(config, repos) {
-  workingConfig = JSON.parse(JSON.stringify(config));
+  workingConfig = config;
+  filteredRepos = repos;
   injectStyles();
   const cards = document.querySelectorAll(".card");
   cards.forEach((card, i) => {

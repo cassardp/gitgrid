@@ -40,15 +40,21 @@ function getSize(repo) {
 }
 
 function sortRepos(repos) {
-  const order = CONFIG.sort || "stars";
+  const sortBy = CONFIG.sort || "stars";
   const configured = new Set(Object.keys(CONFIG.repos || {}));
   repos.sort((a, b) => {
+    const aRC = (CONFIG.repos && CONFIG.repos[a.name]) || {};
+    const bRC = (CONFIG.repos && CONFIG.repos[b.name]) || {};
+    const aHasOrder = typeof aRC.order === "number";
+    const bHasOrder = typeof bRC.order === "number";
+    if (aHasOrder && bHasOrder) return aRC.order - bRC.order;
+    if (aHasOrder !== bHasOrder) return aHasOrder ? -1 : 1;
     const aPri = configured.has(a.name) ? 0 : 1;
     const bPri = configured.has(b.name) ? 0 : 1;
     if (aPri !== bPri) return aPri - bPri;
-    if (order === "stars") return b.stargazers_count - a.stargazers_count;
-    if (order === "updated") return new Date(b.updated_at) - new Date(a.updated_at);
-    if (order === "name") return a.name.localeCompare(b.name);
+    if (sortBy === "stars") return b.stargazers_count - a.stargazers_count;
+    if (sortBy === "updated") return new Date(b.updated_at) - new Date(a.updated_at);
+    if (sortBy === "name") return a.name.localeCompare(b.name);
     return 0;
   });
   return repos;
@@ -142,6 +148,7 @@ function renderCard(repo, index) {
     return `
       <a class="card card-hero card-${size}"
          href="${link}" target="_blank" rel="noopener"
+         data-repo="${escapeHTML(repo.name)}"
          style="animation-delay:${delay}s">
         <div class="card-img">
           <img src="${rc.screenshot}" alt="${escapeHTML(repo.name)}" loading="lazy" />
@@ -159,6 +166,7 @@ function renderCard(repo, index) {
   return `
     <a class="card card-${size}"
        href="${link}" target="_blank" rel="noopener"
+       data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s">
       <div class="card-top">
         <div class="card-name">${escapeHTML(repo.name)}${ext}</div>
