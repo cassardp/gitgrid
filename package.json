@@ -1,0 +1,14 @@
+{
+  "name": "gitgrid",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "sync": "node sync.js",
+    "build": "node sync.js && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.3.1"
+  }
+}
