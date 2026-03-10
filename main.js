@@ -1,4 +1,5 @@
 import CONFIG from "./config.js";
+import { createIcons, Star, ArrowUpRight, Github, RefreshCw, Eye, Sun, Moon } from "lucide";
 
 let cachedData = null;
 let previewMode = false;
@@ -14,9 +15,9 @@ const LANG_COLORS = {
   Zig: "#ec915c", Nim: "#ffc200", OCaml: "#3be133",
 };
 
-const starSVG = `<svg class="star-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>`;
-
-const arrowSVG = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 11L11 3M11 3H5M11 3v6"/></svg>`;
+function refreshIcons() {
+  createIcons({ icons: { Star, ArrowUpRight, Github, RefreshCw, Eye, Sun, Moon } });
+}
 
 function setTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
@@ -38,8 +39,9 @@ function updateThemeIcon() {
   if (!btn) return;
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   btn.innerHTML = isDark
-    ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
-    : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
+    ? `<i data-lucide="sun"></i>`
+    : `<i data-lucide="moon"></i>`;
+  refreshIcons();
 }
 
 function getRepoConfig(name) {
@@ -102,18 +104,10 @@ function renderHeader(user) {
 
   const devBtns = import.meta.env.DEV
     ? `<button class="dev-btn" id="sync-btn" title="Sync from GitHub">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1.5 8a6.5 6.5 0 0111.48-4.17M14.5 8a6.5 6.5 0 01-11.48 4.17"/>
-            <path d="M13 1v3.5h-3.5M3 15v-3.5h3.5"/>
-          </svg>
-          Sync
+          <i data-lucide="refresh-cw"></i> Sync
         </button>
         <button class="dev-btn" id="preview-btn" title="Preview production">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          Preview
+          <i data-lucide="eye"></i> Preview
         </button>`
     : "";
 
@@ -121,7 +115,7 @@ function renderHeader(user) {
   document.getElementById("navbar").innerHTML = `
     <div class="nav-left">
       <a class="nav-back" href="${user.html_url}" target="_blank">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+        <i data-lucide="github"></i>
       </a>
     </div>
     <div class="nav-center">${navLinks.join("")}</div>
@@ -152,6 +146,8 @@ function renderHeader(user) {
 
   const previewBtn = document.getElementById("preview-btn");
   if (previewBtn) previewBtn.addEventListener("click", handlePreview);
+
+  refreshIcons();
 }
 
 function renderCard(repo, index) {
@@ -163,7 +159,7 @@ function renderCard(repo, index) {
     ? `<span class="card-meta-item">${repo.language}</span>` : "";
 
   const stars = repo.stargazers_count > 0
-    ? `<span class="card-price">${starSVG} ${repo.stargazers_count.toLocaleString()}</span>` : "";
+    ? `<span class="card-price"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
   const bgImg = rc.screenshot
     ? `background-image:url('/${rc.screenshot}');background-size:cover;background-position:center;` : "";
@@ -173,7 +169,7 @@ function renderCard(repo, index) {
        href="${link}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s;${bgImg}">
-      <div class="card-arrow">${arrowSVG}</div>
+      <div class="card-arrow"><i data-lucide="arrow-up-right"></i></div>
       <div class="card-image"></div>
       <div class="card-footer">
         ${lang}
@@ -202,6 +198,7 @@ function renderGrid(repos) {
   }
 
   content.innerHTML = `<div class="grid">${filtered.map(renderCard).join("")}</div>`;
+  refreshIcons();
   return filtered;
 }
 

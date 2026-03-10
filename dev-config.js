@@ -1,3 +1,5 @@
+import { createIcons, X, Upload } from "lucide";
+
 let workingConfig = null;
 let saveTimer = null;
 let stylesInjected = false;
@@ -27,23 +29,50 @@ function injectStyles() {
     }
     .card.dev-drag-ghost > * { visibility: hidden; }
     .dev-upload-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       display: flex;
       align-items: center;
       gap: 6px;
       padding: 8px 14px;
       border-radius: 8px;
-      border: 1.5px dashed var(--text-3);
+      border: 1.5px dashed #d5d5d5;
       background: none;
-      color: var(--text-3);
+      color: #999;
       font-size: 13px;
       cursor: pointer;
       transition: border-color 0.2s, color 0.2s;
+      z-index: 1;
     }
     .dev-upload-btn:hover {
       border-color: var(--text-2);
       color: var(--text-2);
     }
     .dev-upload-input { display: none; }
+    .dev-remove-img {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 2;
+    }
+    .card:hover .dev-remove-img { opacity: 1; }
+    .dev-remove-img:hover { background: rgba(220,38,38,0.8); }
+    .dev-remove-img svg { width: 14px; height: 14px; }
+    .dev-upload-btn svg { width: 14px; height: 14px; }
   `;
   document.head.appendChild(style);
 }
@@ -167,12 +196,32 @@ function setupDrag(card, repo) {
   });
 }
 
+function setupRemoveImage(card, repo) {
+  const rc = (workingConfig.repos && workingConfig.repos[repo.name]) || {};
+  if (!rc.screenshot) return;
+
+  const btn = document.createElement("button");
+  btn.className = "dev-remove-img";
+  btn.title = "Remove image";
+  btn.innerHTML = `<i data-lucide="x"></i>`;
+
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    delete getRC(repo.name).screenshot;
+    await saveConfig();
+    card.style.backgroundImage = "";
+    btn.remove();
+    setupUploadButton(card, repo);
+  });
+
+  card.appendChild(btn);
+  createIcons({ icons: { X }, nameAttr: "data-lucide" });
+}
+
 function setupUploadButton(card, repo) {
   const rc = (workingConfig.repos && workingConfig.repos[repo.name]) || {};
   if (rc.screenshot) return;
-
-  const imageDiv = card.querySelector(".card-image");
-  if (!imageDiv) return;
 
   const input = document.createElement("input");
   input.type = "file";
@@ -181,7 +230,7 @@ function setupUploadButton(card, repo) {
 
   const btn = document.createElement("label");
   btn.className = "dev-upload-btn";
-  btn.textContent = "Upload image";
+  btn.innerHTML = `<i data-lucide="upload"></i> Upload image`;
   btn.appendChild(input);
 
   btn.addEventListener("click", (e) => e.stopPropagation());
@@ -191,7 +240,8 @@ function setupUploadButton(card, repo) {
     if (file) handleImageDrop(repo.name, file);
   });
 
-  imageDiv.appendChild(btn);
+  card.appendChild(btn);
+  createIcons({ icons: { Upload }, nameAttr: "data-lucide" });
 }
 
 export function initDevConfig(config, repos) {
@@ -203,6 +253,7 @@ export function initDevConfig(config, repos) {
     if (repos[i]) {
       setupDrag(card, repos[i]);
       setupUploadButton(card, repos[i]);
+      setupRemoveImage(card, repos[i]);
     }
   });
 }

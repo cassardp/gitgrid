@@ -16,26 +16,20 @@ export default {
       screenshot: "images/gribli.png"
     },
     Screan: {
-      size: "small",
-      screenshot: "images/Screan.png"
+      size: "small"
     },
     Pinpin: {
-      size: "small",
-      screenshot: "images/Pinpin.png"
+      size: "small"
     },
     Paaage: {
-      size: "small",
-      screenshot: "images/Paaage.png"
+      size: "small"
     },
     iconlab: {
-      size: "medium",
-      screenshot: "images/iconlab.png"
+      size: "medium"
     },
     gribli_web: {
       hidden: true
     },
-    gitgrid: {
-      screenshot: "images/gitgrid.png"
-    }
+    gitgrid: {}
   }
 };
