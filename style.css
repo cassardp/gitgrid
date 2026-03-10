@@ -9,11 +9,11 @@
 }
 
 [data-theme="dark"] {
-  --bg: #111;
-  --surface: #1a1a1a;
-  --text: #e8e8e8;
-  --text-2: #737373;
-  --text-3: #4a4a4a;
+  --bg: #171717;
+  --surface: #262626;
+  --text: #f5f5f5;
+  --text-2: #a3a3a3;
+  --text-3: #525252;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,6 +45,7 @@ body {
 
 .nav-right {
   justify-content: flex-end;
+  gap: 10px;
 }
 
 .nav-back {
@@ -115,37 +116,66 @@ body {
   color: var(--text);
 }
 
-/* Dev buttons */
-.dev-btns {
+/* Footer actions */
+.footer-actions {
   display: flex;
-  gap: 8px;
-  margin-left: 8px;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 48px;
 }
 
-.dev-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  font-family: inherit;
+.footer-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-label {
   font-size: 13px;
-  font-weight: 500;
-  color: var(--text-2);
-  background: var(--surface);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+  color: var(--text-3);
+}
+
+.footer-label a {
+  color: var(--text-3);
+  text-decoration: none;
   transition: color 0.15s;
 }
 
-.dev-btn svg {
-  width: 15px;
-  height: 15px;
+.footer-label a:hover {
+  color: var(--text-2);
 }
 
-.dev-btn:hover { color: var(--text); }
-.dev-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.dev-btn.syncing svg { animation: spin 0.8s linear infinite; }
+.footer-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+[data-theme="dark"] .footer-action {
+  border-color: #333;
+}
+
+.footer-action svg {
+  width: 18px;
+  height: 18px;
+}
+
+.footer-action:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.footer-action:disabled { opacity: 0.4; cursor: not-allowed; }
+.footer-action.syncing svg { animation: spin 0.8s linear infinite; }
+.footer-action.active { color: var(--text); background: var(--surface); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Main */
@@ -176,6 +206,7 @@ body {
   opacity: 0;
   animation: fadeIn 0.4s ease forwards;
   position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
 /* Arrow button — top right */
@@ -200,13 +231,14 @@ body {
   height: 16px;
 }
 
-.card:hover .card-arrow {
-  background: #e8e8e8;
-  color: var(--text);
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
-[data-theme="dark"] .card:hover .card-arrow {
-  background: #333;
+[data-theme="dark"] .card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  background: #2a2a2a;
 }
 
 /* Card image area */

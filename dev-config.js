@@ -55,22 +55,22 @@ function injectStyles() {
       position: absolute;
       top: 18px;
       left: 18px;
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: none;
-      background: rgba(0,0,0,0.5);
-      color: #fff;
+      background: var(--bg);
+      color: var(--text-2);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       opacity: 0;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s, background 0.2s, color 0.2s;
       z-index: 2;
     }
     .card:hover .dev-remove-img { opacity: 1; }
-    .dev-remove-img:hover { background: rgba(220,38,38,0.8); }
+    .dev-remove-img:hover { background: rgba(220,38,38,0.8); color: #fff; }
     .dev-remove-img svg { width: 14px; height: 14px; }
     .dev-upload-btn svg { width: 14px; height: 14px; }
   `;

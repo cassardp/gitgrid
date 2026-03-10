@@ -1,5 +1,5 @@
 import CONFIG from "./config.js";
-import { createIcons, Star, ArrowUpRight, Github, RefreshCw, Eye, Sun, Moon } from "lucide";
+import { createIcons, Star, ArrowUpRight, Github, RefreshCw, Eye, Sun, Moon, Globe, Twitter } from "lucide";
 
 let cachedData = null;
 let previewMode = false;
@@ -16,7 +16,7 @@ const LANG_COLORS = {
 };
 
 function refreshIcons() {
-  createIcons({ icons: { Star, ArrowUpRight, Github, RefreshCw, Eye, Sun, Moon } });
+  createIcons({ icons: { Star, ArrowUpRight, Github, RefreshCw, Eye, Sun, Moon, Globe, Twitter } });
 }
 
 function setTheme(t) {
@@ -92,51 +92,47 @@ function renderHeader(user) {
   const name = CONFIG.title || user.name || user.login;
   const login = user.login;
 
-  // Navbar links
-  const navLinks = [];
-  navLinks.push(`<a class="nav-link" href="${user.html_url}" target="_blank">GitHub</a>`);
-  if (user.blog) {
-    const url = user.blog.startsWith("http") ? user.blog : `https://${user.blog}`;
-    navLinks.push(`<a class="nav-link" href="${url}" target="_blank">Website</a>`);
-  }
-  if (user.twitter_username)
-    navLinks.push(`<a class="nav-link" href="https://x.com/${user.twitter_username}" target="_blank">X</a>`);
-
   const devBtns = import.meta.env.DEV
-    ? `<button class="dev-btn" id="sync-btn" title="Sync from GitHub">
-          <i data-lucide="refresh-cw"></i> Sync
+    ? `<button class="footer-action" id="sync-btn" title="Sync from GitHub">
+          <i data-lucide="refresh-cw"></i>
         </button>
-        <button class="dev-btn" id="preview-btn" title="Preview production">
-          <i data-lucide="eye"></i> Preview
+        <button class="footer-action" id="preview-btn" title="Preview production">
+          <i data-lucide="eye"></i>
         </button>`
     : "";
 
-  // Navbar
   document.getElementById("navbar").innerHTML = `
-    <div class="nav-left">
-      <a class="nav-back" href="${user.html_url}" target="_blank">
-        <i data-lucide="github"></i>
-      </a>
-    </div>
-    <div class="nav-center">${navLinks.join("")}</div>
-    <div class="nav-right dev-btns">
+    <div class="nav-left"></div>
+    <div class="nav-right">
       ${devBtns}
-      <button class="dev-btn" id="theme-toggle" title="Toggle theme"></button>
     </div>
   `;
 
-  updateThemeIcon();
-
-  // Page title — "Projects / Name"
   document.getElementById("page-title").innerHTML = `
     <h1 class="title">
-      <span class="title-prefix">Projects</span>
-      <span class="title-slash"> / </span>
       <span class="title-name">${escapeHTML(name)}</span>
     </h1>
   `;
 
   document.title = `${name} — Portfolio`;
+
+  // Footer
+  const socialLinks = [];
+  socialLinks.push(`<a class="footer-action" href="${user.html_url}" target="_blank" title="GitHub"><i data-lucide="github"></i></a>`);
+  if (user.twitter_username)
+    socialLinks.push(`<a class="footer-action" href="https://x.com/${user.twitter_username}" target="_blank" title="X / Twitter"><i data-lucide="twitter"></i></a>`);
+  if (user.blog) {
+    const url = user.blog.startsWith("http") ? user.blog : `https://${user.blog}`;
+    socialLinks.push(`<a class="footer-action" href="${url}" target="_blank" title="Website"><i data-lucide="globe"></i></a>`);
+  }
+
+  document.getElementById("footer-actions").innerHTML = `
+    <div class="footer-icons">
+      ${socialLinks.join("")}
+      <button class="footer-action" id="theme-toggle" title="Toggle theme"></button>
+    </div>
+    <span class="footer-label">Built with <a href="https://github.com/${escapeHTML(login)}/gitgrid" target="_blank">GitGrid</a></span>
+  `;
 
   const btn = document.getElementById("sync-btn");
   if (btn) btn.addEventListener("click", handleSync);
@@ -147,6 +143,7 @@ function renderHeader(user) {
   const previewBtn = document.getElementById("preview-btn");
   if (previewBtn) previewBtn.addEventListener("click", handlePreview);
 
+  updateThemeIcon();
   refreshIcons();
 }
 
