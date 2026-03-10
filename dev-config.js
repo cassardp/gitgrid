@@ -26,6 +26,24 @@ function injectStyles() {
       box-shadow: none !important;
     }
     .card.dev-drag-ghost > * { visibility: hidden; }
+    .dev-upload-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1.5px dashed var(--text-3);
+      background: none;
+      color: var(--text-3);
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .dev-upload-btn:hover {
+      border-color: var(--text-2);
+      color: var(--text-2);
+    }
+    .dev-upload-input { display: none; }
   `;
   document.head.appendChild(style);
 }
@@ -64,7 +82,14 @@ async function handleImageDrop(name, file) {
     if (result.ok) {
       getRC(name).screenshot = result.path;
       await saveConfig();
-      location.reload();
+      const card = document.querySelector(`[data-repo="${name}"]`);
+      if (card) {
+        card.style.backgroundImage = `url('/${result.path}')`;
+        card.style.backgroundSize = "cover";
+        card.style.backgroundPosition = "center";
+        const btn = card.querySelector(".dev-upload-btn");
+        if (btn) btn.remove();
+      }
     }
   };
   reader.readAsDataURL(file);
@@ -142,12 +167,42 @@ function setupDrag(card, repo) {
   });
 }
 
+function setupUploadButton(card, repo) {
+  const rc = (workingConfig.repos && workingConfig.repos[repo.name]) || {};
+  if (rc.screenshot) return;
+
+  const imageDiv = card.querySelector(".card-image");
+  if (!imageDiv) return;
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.className = "dev-upload-input";
+
+  const btn = document.createElement("label");
+  btn.className = "dev-upload-btn";
+  btn.textContent = "Upload image";
+  btn.appendChild(input);
+
+  btn.addEventListener("click", (e) => e.stopPropagation());
+
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (file) handleImageDrop(repo.name, file);
+  });
+
+  imageDiv.appendChild(btn);
+}
+
 export function initDevConfig(config, repos) {
   workingConfig = config;
   filteredRepos = repos;
   injectStyles();
   const cards = document.querySelectorAll(".card");
   cards.forEach((card, i) => {
-    if (repos[i]) setupDrag(card, repos[i]);
+    if (repos[i]) {
+      setupDrag(card, repos[i]);
+      setupUploadButton(card, repos[i]);
+    }
   });
 }

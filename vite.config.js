@@ -106,9 +106,5 @@ function syncPlugin() {
 
 export default defineConfig({
   plugins: [syncPlugin()],
-  server: {
-    watch: {
-      ignored: [path.resolve(process.cwd(), "config.js")],
-    },
-  },
+  server: {},
 });

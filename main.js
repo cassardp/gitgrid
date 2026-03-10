@@ -20,6 +20,26 @@ const arrowSVG = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" st
 
 function setTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("theme", t);
+}
+
+function getTheme() {
+  return localStorage.getItem("theme") || CONFIG.theme || "light";
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme");
+  setTheme(current === "dark" ? "light" : "dark");
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  btn.innerHTML = isDark
+    ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
+    : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
 }
 
 function getRepoConfig(name) {
@@ -81,22 +101,20 @@ function renderHeader(user) {
     navLinks.push(`<a class="nav-link" href="https://x.com/${user.twitter_username}" target="_blank">X</a>`);
 
   const devBtns = import.meta.env.DEV
-    ? `<div class="dev-btns">
-        <button class="dev-btn" id="sync-btn" title="Sync from GitHub">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    ? `<button class="dev-btn" id="sync-btn" title="Sync from GitHub">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M1.5 8a6.5 6.5 0 0111.48-4.17M14.5 8a6.5 6.5 0 01-11.48 4.17"/>
             <path d="M13 1v3.5h-3.5M3 15v-3.5h3.5"/>
           </svg>
           Sync
         </button>
         <button class="dev-btn" id="preview-btn" title="Preview production">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
           Preview
-        </button>
-       </div>`
+        </button>`
     : "";
 
   // Navbar
@@ -107,8 +125,13 @@ function renderHeader(user) {
       </a>
     </div>
     <div class="nav-center">${navLinks.join("")}</div>
-    <div class="nav-right">${devBtns}</div>
+    <div class="nav-right dev-btns">
+      ${devBtns}
+      <button class="dev-btn" id="theme-toggle" title="Toggle theme"></button>
+    </div>
   `;
+
+  updateThemeIcon();
 
   // Page title — "Projects / Name"
   document.getElementById("page-title").innerHTML = `
@@ -124,6 +147,9 @@ function renderHeader(user) {
   const btn = document.getElementById("sync-btn");
   if (btn) btn.addEventListener("click", handleSync);
 
+  const themeBtn = document.getElementById("theme-toggle");
+  if (themeBtn) themeBtn.addEventListener("click", toggleTheme);
+
   const previewBtn = document.getElementById("preview-btn");
   if (previewBtn) previewBtn.addEventListener("click", handlePreview);
 }
@@ -131,6 +157,7 @@ function renderHeader(user) {
 function renderCard(repo, index) {
   const link = getRepoLink(repo);
   const delay = Math.min(index * 0.03, 0.5);
+  const rc = getRepoConfig(repo.name);
 
   const lang = repo.language
     ? `<span class="card-meta-item">${repo.language}</span>` : "";
@@ -138,11 +165,14 @@ function renderCard(repo, index) {
   const stars = repo.stargazers_count > 0
     ? `<span class="card-price">${starSVG} ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
+  const bgImg = rc.screenshot
+    ? `background-image:url('/${rc.screenshot}');background-size:cover;background-position:center;` : "";
+
   return `
     <a class="card"
        href="${link}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
-       style="animation-delay:${delay}s">
+       style="animation-delay:${delay}s;${bgImg}">
       <div class="card-arrow">${arrowSVG}</div>
       <div class="card-image"></div>
       <div class="card-footer">
@@ -217,7 +247,7 @@ async function handlePreview() {
 }
 
 async function init() {
-  setTheme(CONFIG.theme || "light");
+  setTheme(getTheme());
 
   try {
     const res = await fetch("/data.json");

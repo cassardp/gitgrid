@@ -12,22 +12,30 @@ export default {
       size: "small"
     },
     gribli: {
-      size: "small"
+      size: "small",
+      screenshot: "images/gribli.png"
     },
     Screan: {
-      size: "small"
+      size: "small",
+      screenshot: "images/Screan.png"
     },
     Pinpin: {
-      size: "small"
+      size: "small",
+      screenshot: "images/Pinpin.png"
     },
     Paaage: {
-      size: "small"
+      size: "small",
+      screenshot: "images/Paaage.png"
     },
     iconlab: {
-      size: "medium"
+      size: "medium",
+      screenshot: "images/iconlab.png"
     },
     gribli_web: {
       hidden: true
+    },
+    gitgrid: {
+      screenshot: "images/gitgrid.png"
     }
   }
 };

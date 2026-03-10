@@ -113,22 +113,22 @@ body {
 /* Dev buttons */
 .dev-btns {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   margin-left: 8px;
 }
 
 .dev-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 7px 14px;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-2);
   background: var(--surface);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: color 0.15s;
 }
@@ -204,7 +204,6 @@ body {
   min-height: 240px;
 }
 
-
 /* Card footer — metadata + title row */
 .card-footer {
   display: flex;
@@ -214,9 +213,12 @@ body {
 }
 
 .card-meta-item {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-2);
   font-weight: 400;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
 }
 
 .card-title-row {
@@ -227,10 +229,10 @@ body {
 }
 
 .card-title {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-size: 16px;
+  font-weight: 400;
   color: var(--text);
+  text-transform: capitalize;
 }
 
 .card-price {
