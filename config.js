@@ -14,7 +14,8 @@ export default {
     gribli: {
       size: "small",
       screenshot: "images/gribli.png",
-      order: 0
+      order: 0,
+      hidden: true
     },
     Screan: {
       size: "small",
