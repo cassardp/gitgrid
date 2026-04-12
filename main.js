@@ -1,15 +1,15 @@
-import CONFIG from "./config.js";
 import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } from "lucide";
 
 let cachedData = null;
 let previewMode = false;
+let CONFIG = {};
+let currentUser = null;
+let isOwner = false;
 
 function refreshIcons() {
   createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
-
-
 
 function getRepoConfig(name) {
   return (CONFIG.repos && CONFIG.repos[name]) || {};
@@ -84,9 +84,8 @@ function buildSocialLinks(user) {
 
 function renderHeader(user) {
   const name = CONFIG.title || user.name || user.login;
-  const login = user.login;
 
-  if (import.meta.env.DEV && !document.getElementById("dev-palette")) {
+  if (isOwner && !document.getElementById("dev-palette")) {
     const palette = document.createElement("div");
     palette.id = "dev-palette";
     palette.innerHTML = `
@@ -101,10 +100,13 @@ function renderHeader(user) {
       </button>
     `;
     document.body.appendChild(palette);
+    palette.querySelector("#sync-btn").addEventListener("click", handleSync);
+    palette.querySelector("#preview-btn").addEventListener("click", handlePreview);
+    palette.querySelector("#settings-btn").addEventListener("click", openSettings);
   }
 
   const bioText = CONFIG.bio || user.bio;
-  const bio = CONFIG.showBio && bioText ? `<p class="subtitle">${escapeHTML(bioText)}</p>` : "";
+  const bio = CONFIG.showBio !== false && bioText ? `<p class="subtitle">${escapeHTML(bioText)}</p>` : "";
 
   const socialHTML = buildSocialLinks(user);
   const socialRow = socialHTML ? `<div class="social-links">${socialHTML}</div>` : "";
@@ -122,23 +124,14 @@ function renderHeader(user) {
   document.title = `${name} — Portfolio`;
 
   // Footer
-  const footerText = CONFIG.footer || `© ${new Date().getFullYear()} ${escapeHTML(name)}`;
+  const footerText = CONFIG.footer || `© ${new Date().getFullYear()} ${name}`;
   const footerEl = document.getElementById("footer-actions");
   footerEl.innerHTML = `
     <p class="footer-text">${escapeHTML(footerText)}</p>
-    <a class="footer-label" href="https://github.com/${escapeHTML(login)}/gitgrid" target="_blank">Made with GitGrid</a>
+    <a class="footer-label" href="https://gitgrid.app" target="_blank">Made with GitGrid</a>
   `;
   footerEl.style.alignItems = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
   if (CONFIG.showFooter === false) footerEl.querySelector(".footer-text").style.display = "none";
-
-  const btn = document.getElementById("sync-btn");
-  if (btn) btn.addEventListener("click", handleSync);
-
-  const previewBtn = document.getElementById("preview-btn");
-  if (previewBtn) previewBtn.addEventListener("click", handlePreview);
-
-  const settingsBtn = document.getElementById("settings-btn");
-  if (settingsBtn) settingsBtn.addEventListener("click", openSettings);
 
   refreshIcons();
 }
@@ -156,7 +149,7 @@ function renderCard(repo, index) {
     ? `<span class="card-price"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
   const bgImg = rc.screenshot
-    ? `background-image:url('/${rc.screenshot}');background-size:cover;background-position:center;` : "";
+    ? `background-image:url('/img/${rc.screenshot}');background-size:cover;background-position:center;` : "";
 
   const hiddenClass = hidden ? " card-hidden" : "";
 
@@ -179,7 +172,7 @@ function renderCard(repo, index) {
 function renderGrid(repos) {
   const content = document.getElementById("content");
   let filtered = repos.filter(r => !r.fork);
-  if (!import.meta.env.DEV || previewMode) {
+  if (!isOwner || previewMode) {
     filtered = filtered.filter(r => !isExcluded(r.name));
   }
   filtered = sortRepos(filtered);
@@ -202,13 +195,10 @@ async function handleSync() {
   btn.disabled = true;
 
   try {
-    const res = await fetch("/__sync", { method: "POST" });
-    const result = await res.json();
+    const res = await fetch("/api/sync", { method: "POST" });
+    const data = await res.json();
 
-    if (!result.ok) throw new Error(result.error);
-
-    const dataRes = await fetch("/data.json?t=" + Date.now());
-    const data = await dataRes.json();
+    if (!res.ok) throw new Error(data.error);
 
     cachedData = data;
     renderHeader(data.user);
@@ -223,7 +213,7 @@ async function handleSync() {
 
 async function renderWithDevConfig(repos) {
   const filtered = renderGrid(repos);
-  if (import.meta.env.DEV && filtered && !previewMode) {
+  if (isOwner && filtered && !previewMode) {
     const { initDevConfig } = await import("./dev-config.js");
     initDevConfig(CONFIG, filtered);
   }
@@ -244,6 +234,14 @@ async function handlePreview() {
   if (syncBtn) syncBtn.style.display = previewMode ? "none" : "";
   if (settingsBtn) settingsBtn.style.display = previewMode ? "none" : "";
   if (cachedData) await renderWithDevConfig(cachedData.repos);
+}
+
+async function saveConfig() {
+  await fetch("/api/config", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(CONFIG),
+  });
 }
 
 function openSettings() {
@@ -274,7 +272,7 @@ function openSettings() {
         <div class="setting-row-pair">
           <div class="setting-row">
             <span class="setting-row-label">Show bio</span>
-            <button class="setting-toggle ${CONFIG.showBio ? "on" : ""}" id="s-show-bio"></button>
+            <button class="setting-toggle ${CONFIG.showBio !== false ? "on" : ""}" id="s-show-bio"></button>
           </div>
           <div class="setting-row">
             <span class="setting-row-label">Alignment</span>
@@ -333,6 +331,16 @@ function openSettings() {
           </div>
         </div>
       </div>
+
+      <div class="setting-section setting-danger">
+        <span class="setting-section-title" style="color:var(--danger)">Danger zone</span>
+        <p style="font-size:13px;color:var(--text-2);margin:0 0 12px">This will permanently delete your account, config, and all uploaded images.</p>
+        <div class="setting-group">
+          <input class="setting-input" id="s-delete-confirm" type="text"
+            placeholder="Type ${escapeHTML(currentUser.username)} to confirm">
+        </div>
+        <button class="setting-delete-btn" id="s-delete-btn" disabled>Delete account</button>
+      </div>
     </div>
   `;
 
@@ -356,7 +364,7 @@ function openSettings() {
     });
   });
 
-  // Apply changes in memory + live DOM update (no file save)
+  // Apply changes in memory + live DOM update
   const apply = () => {
     CONFIG.title = document.getElementById("s-title").value.trim();
     CONFIG.showBio = document.getElementById("s-show-bio").classList.contains("on");
@@ -379,16 +387,13 @@ function openSettings() {
       const user = cachedData.user;
       const name = CONFIG.title || user.name || user.login;
 
-      // Update alignment
       const pageTitle = document.getElementById("page-title");
       if (pageTitle) pageTitle.style.textAlign = CONFIG.align || "left";
 
-      // Update title
       const titleEl = document.querySelector(".title-name");
       if (titleEl) titleEl.textContent = name;
       document.title = name ? `${name} — Portfolio` : "Portfolio";
 
-      // Update bio
       const bioText = CONFIG.bio || user.bio;
       const existing = document.querySelector(".subtitle");
       if (CONFIG.showBio && bioText) {
@@ -398,13 +403,14 @@ function openSettings() {
           const p = document.createElement("p");
           p.className = "subtitle";
           p.textContent = bioText;
-          document.getElementById("page-title").appendChild(p);
+          const pageTitle = document.getElementById("page-title");
+          const h1 = pageTitle.querySelector(".title");
+          h1.insertAdjacentElement("afterend", p);
         }
       } else if (existing) {
         existing.remove();
       }
 
-      // Update footer
       const footerTextEl = document.querySelector(".footer-text");
       const footerEl = document.getElementById("footer-actions");
       if (footerTextEl) {
@@ -413,7 +419,6 @@ function openSettings() {
       }
       if (footerEl) footerEl.style.alignItems = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
 
-      // Update social links under bio
       const existingSocial = pageTitle.querySelector(".social-links");
       const newSocialHTML = buildSocialLinks(user);
       if (newSocialHTML) {
@@ -430,21 +435,16 @@ function openSettings() {
       }
       refreshIcons();
 
-      // Update grid
-      renderGrid(cachedData.repos);
+      renderWithDevConfig(cachedData.repos);
     }
   };
 
-  // Save to disk on close (DOM already up to date via apply)
+  // Save to API on close
   const close = () => {
     overlay.classList.remove("visible");
     setTimeout(() => {
       overlay.remove();
-      fetch("/__save-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(CONFIG),
-      });
+      saveConfig();
     }, 200);
   };
 
@@ -453,20 +453,106 @@ function openSettings() {
     if (e.target === overlay) close();
   });
 
-  // Live preview: apply in-memory on each change
-  overlay.querySelectorAll(".setting-input").forEach((el) => {
+  overlay.querySelectorAll(".setting-input:not(#s-delete-confirm)").forEach((el) => {
     el.addEventListener("change", apply);
   });
   overlay.querySelectorAll(".setting-toggle").forEach((btn) => {
     btn.addEventListener("click", apply);
   });
+
+  // Delete account
+  const deleteInput = document.getElementById("s-delete-confirm");
+  const deleteBtn = document.getElementById("s-delete-btn");
+  deleteInput.addEventListener("input", () => {
+    deleteBtn.disabled = deleteInput.value !== currentUser.username;
+  });
+  deleteBtn.addEventListener("click", async () => {
+    if (deleteInput.value !== currentUser.username) return;
+    deleteBtn.disabled = true;
+    deleteBtn.textContent = "Deleting…";
+    const res = await fetch("/api/auth/delete", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: currentUser.username }),
+    });
+    if (res.ok) {
+      window.location.href = "/";
+    } else {
+      deleteBtn.textContent = "Delete account";
+      deleteBtn.disabled = false;
+    }
+  });
+}
+
+function getUsername() {
+  const path = window.location.pathname;
+  const parts = path.split("/").filter(Boolean);
+  return parts[0] || null;
 }
 
 async function init() {
+  const username = getUsername();
+
+  if (!username) {
+    // Landing page
+    document.getElementById("content").innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;min-height:80vh;">
+        <a href="/api/auth/login" style="display:inline-block;padding:12px 24px;background:var(--text);color:var(--surface);border-radius:10px;text-decoration:none;font-weight:500;">Login with GitHub</a>
+      </div>
+    `;
+    return;
+  }
+
   try {
-    const res = await fetch("/data.json");
-    if (!res.ok) throw new Error("data.json not found. Run: npm run sync");
-    cachedData = await res.json();
+    // Fetch portfolio data and auth status in parallel
+    const [portfolioRes, authRes] = await Promise.all([
+      fetch(`/api/portfolio/${username}`),
+      fetch("/api/auth/me"),
+    ]);
+
+    const auth = await authRes.json();
+    currentUser = auth.user;
+    isOwner = currentUser && currentUser.username === username;
+
+    if (!portfolioRes.ok) {
+      if (isOwner) {
+        // First login — no data yet, trigger initial sync
+        document.getElementById("content").innerHTML =
+          `<div style="display:flex;align-items:center;justify-content:center;min-height:80vh;color:var(--text-2)">Syncing your repos from GitHub…</div>`;
+        const syncRes = await fetch("/api/sync", { method: "POST" });
+        if (!syncRes.ok) throw new Error("Sync failed");
+        const data = await syncRes.json();
+        CONFIG = {};
+        cachedData = { user: data.user, repos: data.repos };
+        renderHeader(cachedData.user);
+        await renderWithDevConfig(cachedData.repos);
+        return;
+      }
+      throw new Error("Portfolio not found");
+    }
+
+    const portfolio = await portfolioRes.json();
+
+    // User exists but never synced — repos_data is empty
+    if (!portfolio.user && isOwner) {
+      document.getElementById("content").innerHTML =
+        `<div style="display:flex;align-items:center;justify-content:center;min-height:80vh;color:var(--text-2)">Syncing your repos from GitHub…</div>`;
+      const syncRes = await fetch("/api/sync", { method: "POST" });
+      if (!syncRes.ok) throw new Error("Sync failed");
+      const data = await syncRes.json();
+      CONFIG = portfolio.config || {};
+      cachedData = { user: data.user, repos: data.repos };
+      renderHeader(cachedData.user);
+      await renderWithDevConfig(cachedData.repos);
+      return;
+    }
+
+    if (!portfolio.user) {
+      throw new Error("Portfolio not found");
+    }
+
+    CONFIG = portfolio.config || {};
+    cachedData = { user: portfolio.user, repos: portfolio.repos };
 
     renderHeader(cachedData.user);
     await renderWithDevConfig(cachedData.repos);

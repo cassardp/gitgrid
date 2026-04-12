@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "sync": "node sync.js",
-    "build": "node sync.js && vite build && cp data.json dist/ && cp -r images dist/ 2>/dev/null || true",
-    "preview": "vite preview"
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vite build && cd gitgrid-worker && npx wrangler deploy"
   },
   "devDependencies": {
     "vite": "^7.3.1"

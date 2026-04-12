@@ -2,3 +2,4 @@ node_modules
 dist
 data.json
 .DS_Store
+gitgrid-worker/public/

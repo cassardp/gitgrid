@@ -205,13 +205,12 @@ function getRC(name) {
 }
 
 async function saveConfig() {
-  const res = await fetch("/__save-config", {
-    method: "POST",
+  const res = await fetch("/api/config", {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(workingConfig),
   });
-  const result = await res.json();
-  if (!result.ok) console.error("Save failed:", result.error);
+  if (!res.ok) console.error("Save failed");
 }
 
 function debouncedSave() {
@@ -220,21 +219,15 @@ function debouncedSave() {
 }
 
 async function handleImageDrop(name, file) {
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const base64 = reader.result.split(",")[1];
-    const res = await fetch("/__upload-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ repoName: name, filename: file.name, data: base64 }),
-    });
-    const result = await res.json();
-    if (result.ok) {
-      const card = document.querySelector(`[data-repo="${name}"]`);
-      if (card) applyImage(card, { name }, result.path);
-    }
-  };
-  reader.readAsDataURL(file);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("repo", name);
+  const res = await fetch("/api/images", { method: "POST", body: formData });
+  const result = await res.json();
+  if (result.key) {
+    const card = document.querySelector(`[data-repo="${name}"]`);
+    if (card) applyImage(card, { name }, result.key);
+  }
 }
 
 function setupDrag(card, repo) {
@@ -480,7 +473,7 @@ function applyImage(card, repo, imagePath) {
   const rc = getRC(repo.name);
   if (imagePath) {
     rc.screenshot = imagePath;
-    card.style.backgroundImage = `url('/${imagePath}')`;
+    card.style.backgroundImage = `url('/img/${imagePath}')`;
     card.style.backgroundSize = "cover";
     card.style.backgroundPosition = "center";
     const placeholder = card.querySelector(".dev-no-image");
@@ -515,10 +508,11 @@ async function openImagePicker(card, repo) {
   const existing = document.querySelector(".picker-overlay");
   if (existing) existing.remove();
 
-  const res = await fetch("/__list-images");
-  const { images } = await res.json();
+  const res = await fetch("/api/images");
+  const { images: imageList } = await res.json();
   const rc = getRC(repo.name);
   const current = rc.screenshot || "";
+  const images = imageList.map(img => img.r2_key);
 
   const overlay = document.createElement("div");
   overlay.className = "picker-overlay";
@@ -526,7 +520,7 @@ async function openImagePicker(card, repo) {
   const grid = images.length
     ? images.map(img => `
         <div class="picker-item${img === current ? " selected" : ""}" data-path="${img}">
-          <img src="/${img}" alt="${img}">
+          <img src="/img/${img}" alt="${img}">
           <button class="picker-item-delete" data-path="${img}" title="Delete image"><i data-lucide="trash-2"></i></button>
         </div>`).join("")
     : `<div class="picker-empty">No images yet. Upload one below.</div>`;
@@ -574,10 +568,10 @@ async function openImagePicker(card, repo) {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const imgPath = btn.dataset.path;
-      await fetch("/__delete-image", {
-        method: "POST",
+      await fetch("/api/images", {
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagePath: imgPath }),
+        body: JSON.stringify({ key: imgPath }),
       });
       // Remove from any card config that uses it
       if (workingConfig.repos) {
@@ -608,21 +602,15 @@ async function openImagePicker(card, repo) {
     input.addEventListener("change", async () => {
       const file = input.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64 = reader.result.split(",")[1];
-        const r = await fetch("/__upload-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ repoName: repo.name, filename: file.name, data: base64 }),
-        });
-        const result = await r.json();
-        if (result.ok) {
-          applyImage(card, repo, result.path);
-          close();
-        }
-      };
-      reader.readAsDataURL(file);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("repo", repo.name);
+      const r = await fetch("/api/images", { method: "POST", body: formData });
+      const result = await r.json();
+      if (result.key) {
+        applyImage(card, repo, result.key);
+        close();
+      }
     });
     input.click();
   });

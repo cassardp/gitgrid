@@ -7,6 +7,7 @@
   --text-3: #a3a3a3;
   --icon-border: color-mix(in srgb, var(--text) 8%, transparent);
   --toggle-on: var(--text);
+  --danger: #dc2626;
   --radius: 16px;
   --gap: 20px;
 }
@@ -537,6 +538,29 @@ body {
 
 .setting-toggle.on::after {
   transform: translateX(16px);
+}
+
+.setting-delete-btn {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  background: none;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.setting-delete-btn:hover:not(:disabled) {
+  background: var(--danger);
+  color: white;
+}
+
+.setting-delete-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* Responsive */
