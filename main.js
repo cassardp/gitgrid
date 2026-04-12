@@ -92,9 +92,11 @@ function renderHeader(user) {
       <button class="icon-btn" id="sync-btn" title="Sync from GitHub">
         <i data-lucide="refresh-cw"></i>
       </button>
+      <span class="palette-sep"></span>
       <button class="icon-btn" id="preview-btn" title="Preview production">
         <i data-lucide="globe"></i>
       </button>
+      <span class="palette-sep"></span>
       <button class="icon-btn" id="settings-btn" title="Settings">
         <i data-lucide="settings"></i>
       </button>
@@ -229,10 +231,12 @@ async function handlePreview() {
       : `<i data-lucide="globe"></i>`;
     refreshIcons();
   }
-  const syncBtn = document.getElementById("sync-btn");
-  const settingsBtn = document.getElementById("settings-btn");
-  if (syncBtn) syncBtn.style.display = previewMode ? "none" : "";
-  if (settingsBtn) settingsBtn.style.display = previewMode ? "none" : "";
+  const palette = document.getElementById("dev-palette");
+  if (palette) {
+    palette.querySelectorAll(".icon-btn:not(#preview-btn), .palette-sep").forEach(el => {
+      el.style.display = previewMode ? "none" : "";
+    });
+  }
   if (cachedData) await renderWithDevConfig(cachedData.repos);
 }
 

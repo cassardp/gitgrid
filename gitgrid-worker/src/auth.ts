@@ -44,7 +44,8 @@ export async function getSessionUser(request: Request, env: Env) {
 }
 
 export async function handleLogin(env: Env): Promise<Response> {
-	return Response.redirect('https://github.com/apps/gitgrid-app/installations/new', 302);
+	const url = `${GITHUB_AUTHORIZE}?client_id=${env.GITHUB_CLIENT_ID}`;
+	return Response.redirect(url, 302);
 }
 
 export async function handleCallback(request: Request, env: Env): Promise<Response> {

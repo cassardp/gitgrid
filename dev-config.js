@@ -231,6 +231,7 @@ async function handleImageDrop(name, file) {
 }
 
 function setupDrag(card, repo) {
+  if (matchMedia("(pointer: coarse)").matches) return;
   var name = repo.name;
 
   card.addEventListener("pointerdown", function (e) {

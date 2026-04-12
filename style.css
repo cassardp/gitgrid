@@ -30,7 +30,7 @@ body {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   padding: 4px;
   border-radius: 14px;
   background: var(--text);
@@ -39,17 +39,26 @@ body {
   z-index: 50;
 }
 
+#dev-palette .palette-sep {
+  width: 1px;
+  height: 20px;
+  background: color-mix(in srgb, var(--bg) 20%, transparent);
+  flex-shrink: 0;
+}
+
 #dev-palette .icon-btn {
   border: none;
   background: none;
   border-radius: 10px;
   color: var(--bg);
+  transition: transform 0.15s ease;
 }
 
 #dev-palette .icon-btn:hover {
-  background: color-mix(in srgb, var(--bg) 15%, transparent);
+  background: none;
   border-color: transparent;
   color: var(--bg);
+  transform: scale(1.25);
 }
 
 /* Icon buttons (shared between navbar and footer) */
@@ -113,7 +122,7 @@ body {
   font-size: 17px;
   font-weight: 400;
   color: var(--text-2);
-  margin-top: 12px;
+  margin-top: 16px;
   line-height: 1.5;
   max-width: 640px;
 }
@@ -124,7 +133,20 @@ body {
   margin-top: 16px;
 }
 
+.social-links .icon-btn {
+  border: none;
+  background: none;
+  color: var(--text-3);
+}
+
+.social-links .icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
 .social-links .icon-btn:hover {
+  background: none;
+  color: var(--text);
   transform: translateY(-2px);
 }
 
