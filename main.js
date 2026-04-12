@@ -1,11 +1,11 @@
 import CONFIG from "./config.js";
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone } from "lucide";
 
 let cachedData = null;
 let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone } });
 }
 
 function setTheme(t) {
@@ -49,6 +49,17 @@ function getRepoLink(repo) {
 
 function hasExternalLink(repo) {
   return repo.homepage && !repo.homepage.includes("github.com");
+}
+
+function isAppStoreLink(repo) {
+  if (!repo.homepage) return false;
+  return repo.homepage.includes("apps.apple.com") || repo.homepage.includes("play.google.com");
+}
+
+function getCardIcon(repo) {
+  if (isAppStoreLink(repo)) return "smartphone";
+  if (hasExternalLink(repo)) return "globe";
+  return "github";
 }
 
 function escapeHTML(str) {
@@ -156,7 +167,7 @@ function renderCard(repo, index) {
        href="${link}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s;${bgImg}">
-      <div class="card-arrow"><i data-lucide="${hasExternalLink(repo) ? "globe" : "github"}"></i></div>
+      <div class="card-arrow"><i data-lucide="${getCardIcon(repo)}"></i></div>
       <div class="card-footer">
         ${lang}
         <div class="card-title-row">
