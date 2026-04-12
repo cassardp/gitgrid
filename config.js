@@ -17,7 +17,8 @@ export default {
     },
     Screan: {
       size: "small",
-      order: 1
+      order: 1,
+      screenshot: "images/Pinpin.png"
     },
     Pinpin: {
       size: "small",
@@ -47,8 +48,10 @@ export default {
   github: "https://github.com/cassardp",
   twitter: "patricecassard",
   blog: "https://gitgrid.vercel.app",
+  showFooter: true,
   align: "center",
   footerAlign: "center",
   footer: "",
+  email: "cassard@gmail.com",
   bio: ""
 };

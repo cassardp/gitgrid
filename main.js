@@ -1,11 +1,11 @@
 import CONFIG from "./config.js";
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } from "lucide";
 
 let cachedData = null;
 let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
@@ -76,6 +76,9 @@ function buildSocialLinks(user) {
     const url = blogUrl.startsWith("http") ? blogUrl : `https://${blogUrl}`;
     links.push(`<a class="icon-btn icon-btn-social" href="${url}" target="_blank" title="Website"><i data-lucide="globe"></i></a>`);
   }
+  const email = CONFIG.email;
+  if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    links.push(`<a class="icon-btn icon-btn-social" href="mailto:${email}" title="Email"><i data-lucide="mail"></i></a>`);
   return links.join("");
 }
 
@@ -123,9 +126,10 @@ function renderHeader(user) {
   const footerEl = document.getElementById("footer-actions");
   footerEl.innerHTML = `
     <p class="footer-text">${escapeHTML(footerText)}</p>
-    <a class="footer-label" href="https://github.com/${escapeHTML(login)}/gitgrid" target="_blank">Built with GitGrid</a>
+    <a class="footer-label" href="https://github.com/${escapeHTML(login)}/gitgrid" target="_blank">Made with GitGrid</a>
   `;
-  footerEl.style.textAlign = CONFIG.footerAlign || "center";
+  footerEl.style.alignItems = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
+  if (CONFIG.showFooter === false) footerEl.querySelector(".footer-text").style.display = "none";
 
   const btn = document.getElementById("sync-btn");
   if (btn) btn.addEventListener("click", handleSync);
@@ -300,6 +304,11 @@ function openSettings() {
             value="${escapeHTML(CONFIG.blog || (cachedData ? cachedData.user.blog || "" : ""))}"
             placeholder="Website URL">
         </div>
+        <div class="setting-group">
+          <input class="setting-input" id="s-email" type="email"
+            value="${escapeHTML(CONFIG.email || "")}"
+            placeholder="Email">
+        </div>
       </div>
 
       <div class="setting-section">
@@ -309,12 +318,18 @@ function openSettings() {
             value="${escapeHTML(CONFIG.footer || "")}"
             placeholder="© ${new Date().getFullYear()} ${escapeHTML(CONFIG.title || (cachedData ? cachedData.user.name || cachedData.user.login : ""))}">
         </div>
-        <div class="setting-row">
-          <span class="setting-row-label">Alignment</span>
-          <div class="setting-align" data-target="footer">
-            <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "left" ? " on" : ""}" data-align="left"><i data-lucide="align-left"></i></button>
-            <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "center" ? " on" : ""}" data-align="center"><i data-lucide="align-center"></i></button>
-            <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "right" ? " on" : ""}" data-align="right"><i data-lucide="align-right"></i></button>
+        <div class="setting-row-pair">
+          <div class="setting-row">
+            <span class="setting-row-label">Show footer</span>
+            <button class="setting-toggle ${CONFIG.showFooter !== false ? "on" : ""}" id="s-show-footer"></button>
+          </div>
+          <div class="setting-row">
+            <span class="setting-row-label">Alignment</span>
+            <div class="setting-align" data-target="footer">
+              <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "left" ? " on" : ""}" data-align="left"><i data-lucide="align-left"></i></button>
+              <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "center" ? " on" : ""}" data-align="center"><i data-lucide="align-center"></i></button>
+              <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "right" ? " on" : ""}" data-align="right"><i data-lucide="align-right"></i></button>
+            </div>
           </div>
         </div>
       </div>
@@ -345,6 +360,7 @@ function openSettings() {
   const apply = () => {
     CONFIG.title = document.getElementById("s-title").value.trim();
     CONFIG.showBio = document.getElementById("s-show-bio").classList.contains("on");
+    CONFIG.showFooter = document.getElementById("s-show-footer").classList.contains("on");
 
     const headerAlignBtn = overlay.querySelector('.setting-align[data-target="header"] .setting-align-btn.on');
     CONFIG.align = headerAlignBtn ? headerAlignBtn.dataset.align : "left";
@@ -356,6 +372,7 @@ function openSettings() {
     CONFIG.github = document.getElementById("s-github").value.trim();
     CONFIG.twitter = document.getElementById("s-twitter").value.trim();
     CONFIG.blog = document.getElementById("s-blog").value.trim();
+    CONFIG.email = document.getElementById("s-email").value.trim();
 
     if (cachedData) {
       CONFIG.bio = document.getElementById("s-bio").value.trim();
@@ -392,8 +409,9 @@ function openSettings() {
       const footerEl = document.getElementById("footer-actions");
       if (footerTextEl) {
         footerTextEl.textContent = CONFIG.footer || `© ${new Date().getFullYear()} ${name}`;
+        footerTextEl.style.display = CONFIG.showFooter !== false ? "" : "none";
       }
-      if (footerEl) footerEl.style.textAlign = CONFIG.footerAlign || "center";
+      if (footerEl) footerEl.style.alignItems = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
 
       // Update social links under bio
       const existingSocial = pageTitle.querySelector(".social-links");

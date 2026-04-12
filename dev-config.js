@@ -35,9 +35,9 @@ function injectStyles() {
       left: 18px;
       width: 36px;
       height: 36px;
-      border-radius: 50%;
+      border-radius: 10px;
       border: none;
-      background: var(--bg);
+      background: color-mix(in srgb, var(--text) 6%, transparent);
       color: var(--text-2);
       display: flex;
       align-items: center;
