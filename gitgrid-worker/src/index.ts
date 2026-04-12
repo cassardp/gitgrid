@@ -27,7 +27,7 @@ export default {
 		// Portfolio data (public)
 		if (path.startsWith('/api/portfolio/')) {
 			const username = path.split('/')[3];
-			return handleGetPortfolio(username, env);
+			return handleGetPortfolio(username, request, env);
 		}
 
 		// Sync route

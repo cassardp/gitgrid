@@ -26,7 +26,7 @@ export async function handleSync(request: Request, env: Env): Promise<Response> 
 	let page = 1;
 	while (true) {
 		const res = await fetch(
-			`${GITHUB_API}/users/${dbUser.username}/repos?per_page=100&page=${page}&type=public&sort=updated`, {
+			`${GITHUB_API}/user/repos?per_page=100&page=${page}&type=owner&sort=updated`, {
 			headers: {
 				'Authorization': `Bearer ${dbUser.access_token}`,
 				'User-Agent': 'GitGrid',
@@ -58,6 +58,7 @@ export async function handleSync(request: Request, env: Env): Promise<Response> 
 			language: r.language,
 			stargazers_count: r.stargazers_count,
 			fork: r.fork,
+			private: r.private,
 			topics: r.topics || [],
 			created_at: r.created_at,
 			updated_at: r.updated_at,
