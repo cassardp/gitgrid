@@ -13,15 +13,17 @@ export default {
     },
     gribli: {
       size: "small",
-      order: 3
+      order: 1,
+      screenshot: "images/iconlab.png"
     },
     Screan: {
       size: "small",
-      order: 1
+      order: 0,
+      screenshot: "images/Screan.png"
     },
     Pinpin: {
       size: "small",
-      order: 4
+      order: 3
     },
     Paaage: {
       size: "small",
@@ -29,19 +31,19 @@ export default {
     },
     iconlab: {
       size: "medium",
-      order: 6
+      order: 5
     },
     gribli_web: {
       hidden: true
     },
     gitgrid: {
-      order: 5
+      order: 4
     },
     capelo: {
-      order: 7
+      order: 6
     },
     Keblo: {
-      order: 0
+      order: 7
     }
   },
   github: "https://github.com/cassardp",

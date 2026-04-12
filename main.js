@@ -99,7 +99,8 @@ function renderHeader(user) {
     </div>
   `;
 
-  const bio = CONFIG.showBio && user.bio ? `<p class="subtitle">${escapeHTML(user.bio)}</p>` : "";
+  const bioText = CONFIG.bio || user.bio;
+  const bio = CONFIG.showBio && bioText ? `<p class="subtitle">${escapeHTML(bioText)}</p>` : "";
 
   const pageTitle = document.getElementById("page-title");
   pageTitle.innerHTML = `
@@ -113,9 +114,13 @@ function renderHeader(user) {
   document.title = `${name} — Portfolio`;
 
   // Footer
-  document.getElementById("footer-actions").innerHTML = `
+  const footerText = CONFIG.footer || `© ${new Date().getFullYear()} ${escapeHTML(name)}`;
+  const footerEl = document.getElementById("footer-actions");
+  footerEl.innerHTML = `
+    <p class="footer-text">${escapeHTML(footerText)}</p>
     <a class="footer-label" href="https://github.com/${escapeHTML(login)}/gitgrid" target="_blank">Built with GitGrid</a>
   `;
+  footerEl.style.textAlign = CONFIG.footerAlign || "center";
 
   const btn = document.getElementById("sync-btn");
   if (btn) btn.addEventListener("click", handleSync);
@@ -242,16 +247,16 @@ function openSettings() {
       </div>
 
       <div class="setting-section">
-        <span class="setting-section-title">Profile</span>
+        <span class="setting-section-title">Header</span>
         <div class="setting-group">
           <input class="setting-input" id="s-title" type="text"
-            value="${escapeHTML(CONFIG.title || (cachedData ? cachedData.user.name || cachedData.user.login : ""))}"
-            placeholder="Title">
+            value="${escapeHTML(CONFIG.title || "")}"
+            placeholder="${escapeHTML(cachedData ? cachedData.user.name || cachedData.user.login : "Title")}">
         </div>
         <div class="setting-group">
           <input class="setting-input" id="s-bio" type="text"
-            value="${cachedData ? escapeHTML(cachedData.user.bio || "") : ""}"
-            placeholder="Bio">
+            value="${escapeHTML(CONFIG.bio || "")}"
+            placeholder="${cachedData && cachedData.user.bio ? escapeHTML(cachedData.user.bio) : "Bio"}">
         </div>
         <div class="setting-row-pair">
           <div class="setting-row">
@@ -260,7 +265,7 @@ function openSettings() {
           </div>
           <div class="setting-row">
             <span class="setting-row-label">Alignment</span>
-            <div class="setting-align">
+            <div class="setting-align" data-target="header">
               <button class="setting-align-btn${(CONFIG.align || "left") === "left" ? " on" : ""}" data-align="left"><i data-lucide="align-left"></i></button>
               <button class="setting-align-btn${(CONFIG.align || "left") === "center" ? " on" : ""}" data-align="center"><i data-lucide="align-center"></i></button>
               <button class="setting-align-btn${(CONFIG.align || "left") === "right" ? " on" : ""}" data-align="right"><i data-lucide="align-right"></i></button>
@@ -295,6 +300,23 @@ function openSettings() {
             placeholder="Website URL">
         </div>
       </div>
+
+      <div class="setting-section">
+        <span class="setting-section-title">Footer</span>
+        <div class="setting-group">
+          <input class="setting-input" id="s-footer" type="text"
+            value="${escapeHTML(CONFIG.footer || "")}"
+            placeholder="© ${new Date().getFullYear()} ${escapeHTML(CONFIG.title || (cachedData ? cachedData.user.name || cachedData.user.login : ""))}">
+        </div>
+        <div class="setting-row">
+          <span class="setting-row-label">Alignment</span>
+          <div class="setting-align" data-target="footer">
+            <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "left" ? " on" : ""}" data-align="left"><i data-lucide="align-left"></i></button>
+            <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "center" ? " on" : ""}" data-align="center"><i data-lucide="align-center"></i></button>
+            <button class="setting-align-btn${(CONFIG.footerAlign || "center") === "right" ? " on" : ""}" data-align="right"><i data-lucide="align-right"></i></button>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 
@@ -307,12 +329,14 @@ function openSettings() {
     btn.addEventListener("click", () => btn.classList.toggle("on"));
   });
 
-  // Alignment buttons
-  overlay.querySelectorAll(".setting-align-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      overlay.querySelectorAll(".setting-align-btn").forEach(b => b.classList.remove("on"));
-      btn.classList.add("on");
-      apply();
+  // Alignment buttons (scoped per group)
+  overlay.querySelectorAll(".setting-align").forEach((group) => {
+    group.querySelectorAll(".setting-align-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        group.querySelectorAll(".setting-align-btn").forEach(b => b.classList.remove("on"));
+        btn.classList.add("on");
+        apply();
+      });
     });
   });
 
@@ -325,17 +349,21 @@ function openSettings() {
     CONFIG.theme = isDark ? "dark" : "light";
     setTheme(CONFIG.theme);
 
-    const activeAlign = overlay.querySelector(".setting-align-btn.on");
-    CONFIG.align = activeAlign ? activeAlign.dataset.align : "left";
+    const headerAlignBtn = overlay.querySelector('.setting-align[data-target="header"] .setting-align-btn.on');
+    CONFIG.align = headerAlignBtn ? headerAlignBtn.dataset.align : "left";
 
+    const footerAlignBtn = overlay.querySelector('.setting-align[data-target="footer"] .setting-align-btn.on');
+    CONFIG.footerAlign = footerAlignBtn ? footerAlignBtn.dataset.align : "center";
+
+    CONFIG.footer = document.getElementById("s-footer").value.trim();
     CONFIG.github = document.getElementById("s-github").value.trim();
     CONFIG.twitter = document.getElementById("s-twitter").value.trim();
     CONFIG.blog = document.getElementById("s-blog").value.trim();
 
     if (cachedData) {
-      cachedData.user.bio = document.getElementById("s-bio").value.trim();
+      CONFIG.bio = document.getElementById("s-bio").value.trim();
       const user = cachedData.user;
-      const name = CONFIG.title;
+      const name = CONFIG.title || user.name || user.login;
 
       // Update alignment
       const pageTitle = document.getElementById("page-title");
@@ -347,19 +375,28 @@ function openSettings() {
       document.title = name ? `${name} — Portfolio` : "Portfolio";
 
       // Update bio
+      const bioText = CONFIG.bio || user.bio;
       const existing = document.querySelector(".subtitle");
-      if (CONFIG.showBio && user.bio) {
+      if (CONFIG.showBio && bioText) {
         if (existing) {
-          existing.textContent = user.bio;
+          existing.textContent = bioText;
         } else {
           const p = document.createElement("p");
           p.className = "subtitle";
-          p.textContent = user.bio;
+          p.textContent = bioText;
           document.getElementById("page-title").appendChild(p);
         }
       } else if (existing) {
         existing.remove();
       }
+
+      // Update footer
+      const footerTextEl = document.querySelector(".footer-text");
+      const footerEl = document.getElementById("footer-actions");
+      if (footerTextEl) {
+        footerTextEl.textContent = CONFIG.footer || `© ${new Date().getFullYear()} ${name}`;
+      }
+      if (footerEl) footerEl.style.textAlign = CONFIG.footerAlign || "center";
 
       // Update social links in navbar
       const navRight = document.querySelector(".nav-right");

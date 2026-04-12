@@ -121,6 +121,12 @@ body {
 }
 
 
+.footer-text {
+  font-size: 13px;
+  color: var(--text-3);
+  margin: 0;
+}
+
 .footer-label {
   display: inline-flex;
   align-items: center;
@@ -183,7 +189,7 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -255,6 +261,10 @@ body {
 }
 
 /* Hidden cards (dev mode) */
+.card-hidden {
+  filter: grayscale(1);
+  transition: filter 0.3s ease;
+}
 .card-hidden::after {
   content: '';
   position: absolute;
@@ -263,6 +273,10 @@ body {
   opacity: 0.65;
   border-radius: var(--radius);
   pointer-events: none;
+}
+.card-hidden:hover {
+  transform: none;
+  box-shadow: none;
 }
 .card-hidden .card-arrow {
   z-index: 2;
@@ -329,6 +343,7 @@ body {
   max-width: 480px;
   max-height: 80vh;
   overflow-y: auto;
+  scrollbar-width: none;
   padding: 32px;
   position: relative;
   transform: translateY(8px);
