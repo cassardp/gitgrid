@@ -227,7 +227,7 @@ async function handlePreview() {
   if (btn) {
     btn.title = previewMode ? "Back to dev" : "Preview production";
     btn.innerHTML = previewMode
-      ? `<i data-lucide="code"></i>`
+      ? `<i data-lucide="x"></i>`
       : `<i data-lucide="globe"></i>`;
     refreshIcons();
   }
