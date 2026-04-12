@@ -13,23 +13,36 @@ export default {
     },
     gribli: {
       size: "small",
-      screenshot: "images/gribli.png"
+      screenshot: "images/gribli.png",
+      order: 0
     },
     Screan: {
-      size: "small"
+      size: "small",
+      order: 1
     },
     Pinpin: {
-      size: "small"
+      size: "small",
+      order: 3
     },
     Paaage: {
-      size: "small"
+      size: "small",
+      order: 2
     },
     iconlab: {
-      size: "medium"
+      size: "medium",
+      order: 5
     },
     gribli_web: {
       hidden: true
     },
-    gitgrid: {}
+    gitgrid: {
+      order: 4
+    },
+    capelo: {
+      order: 6
+    },
+    Keblo: {
+      order: 7
+    }
   }
 };

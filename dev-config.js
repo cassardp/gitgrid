@@ -1,4 +1,4 @@
-import { createIcons, X, Upload } from "lucide";
+import { createIcons, X, Upload, Eye, EyeOff } from "lucide";
 
 let workingConfig = null;
 let saveTimer = null;
@@ -244,6 +244,39 @@ function setupUploadButton(card, repo) {
   createIcons({ icons: { Upload }, nameAttr: "data-lucide" });
 }
 
+function setupVisibilityToggle(card, repo) {
+  const rc = getRC(repo.name);
+  const arrow = card.querySelector(".card-arrow");
+  if (!arrow) return;
+
+  const hidden = rc.hidden === true;
+  arrow.title = hidden ? "Show repo" : "Hide repo";
+  arrow.innerHTML = hidden
+    ? `<i data-lucide="eye-off"></i>`
+    : `<i data-lucide="eye"></i>`;
+
+  arrow.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isHidden = rc.hidden === true;
+    if (isHidden) {
+      delete rc.hidden;
+    } else {
+      rc.hidden = true;
+    }
+    const nowHidden = rc.hidden === true;
+    card.classList.toggle("card-hidden", nowHidden);
+    arrow.title = nowHidden ? "Show repo" : "Hide repo";
+    arrow.innerHTML = nowHidden
+      ? `<i data-lucide="eye-off"></i>`
+      : `<i data-lucide="eye"></i>`;
+    createIcons({ icons: { Eye, EyeOff }, nameAttr: "data-lucide" });
+    debouncedSave();
+  });
+
+  createIcons({ icons: { Eye, EyeOff }, nameAttr: "data-lucide" });
+}
+
 export function initDevConfig(config, repos) {
   workingConfig = config;
   filteredRepos = repos;
@@ -254,6 +287,7 @@ export function initDevConfig(config, repos) {
       setupDrag(card, repos[i]);
       setupUploadButton(card, repos[i]);
       setupRemoveImage(card, repos[i]);
+      setupVisibilityToggle(card, repos[i]);
     }
   });
 }
