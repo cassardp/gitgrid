@@ -45,7 +45,6 @@ export default {
   title: "",              // Custom title (default: GitHub name)
   showBio: true,          // Show GitHub bio under title
   theme: "light",         // "light" or "dark"
-  sort: "stars",          // "stars", "updated", or "name"
   github: "",             // Override GitHub profile URL
   twitter: "",            // Twitter/X handle
   blog: "",               // Website URL
@@ -74,7 +73,5 @@ Most of this can be edited visually in dev mode via the settings modal and card 
 This is an early version. Planned improvements include:
 
 - Private repo support (via GitHub token)
-- Multi-user / platform mode
-- Custom domain documentation
 - More card layout options
 - Improved mobile experience

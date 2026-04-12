@@ -3,9 +3,6 @@ export default {
   title: "",
   showBio: true,
   theme: "light",
-  exclude: [],
-  maxRepos: 0,
-  sort: "stars",
   repos: {
     cassardp: {
       hidden: false,
