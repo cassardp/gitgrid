@@ -1,8 +1,11 @@
 export default {
   username: "cassardp",
-  title: "",
+  title: "Patrice Cassard",
   showBio: true,
   theme: "light",
+  exclude: [],
+  maxRepos: 0,
+  sort: "stars",
   repos: {
     cassardp: {
       hidden: false,
@@ -10,13 +13,12 @@ export default {
     },
     gribli: {
       size: "small",
-      screenshot: "images/gribli.png",
-      order: 0,
+      order: 1,
       hidden: true
     },
     Screan: {
       size: "small",
-      order: 1
+      order: 0
     },
     Pinpin: {
       size: "small",
@@ -42,5 +44,9 @@ export default {
     Keblo: {
       order: 7
     }
-  }
+  },
+  github: "https://github.com/cassardp",
+  twitter: "patricecassard",
+  blog: "",
+  align: "left"
 };

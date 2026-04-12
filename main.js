@@ -1,22 +1,11 @@
 import CONFIG from "./config.js";
-import { createIcons, Star, ArrowUpRight, Github, RefreshCw, Globe, Twitter, Settings, X, Code } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight } from "lucide";
 
 let cachedData = null;
 let previewMode = false;
 
-const LANG_COLORS = {
-  JavaScript: "#f1e05a", TypeScript: "#3178c6", Python: "#3572A5",
-  Swift: "#F05138", "Objective-C": "#438eff", Kotlin: "#A97BFF",
-  Java: "#b07219", Go: "#00ADD8", Rust: "#dea584", Ruby: "#701516",
-  PHP: "#4F5D95", "C++": "#f34b7d", C: "#555555", "C#": "#178600",
-  Dart: "#00B4AB", HTML: "#e34c26", CSS: "#563d7c", Shell: "#89e051",
-  Vue: "#41b883", Svelte: "#ff3e00", Lua: "#000080", R: "#198CE7",
-  Scala: "#c22d40", Elixir: "#6e4a7e", Haskell: "#5e5086",
-  Zig: "#ec915c", Nim: "#ffc200", OCaml: "#3be133",
-};
-
 function refreshIcons() {
-  createIcons({ icons: { Star, ArrowUpRight, Github, RefreshCw, Globe, Twitter, Settings, X, Code } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight } });
 }
 
 function setTheme(t) {
@@ -34,23 +23,18 @@ function getRepoConfig(name) {
 }
 
 function isExcluded(name) {
-  const rc = getRepoConfig(name);
-  return rc.hidden || (CONFIG.exclude && CONFIG.exclude.includes(name));
+  return getRepoConfig(name).hidden;
 }
 
 function sortRepos(repos) {
   const sortBy = CONFIG.sort || "stars";
-  const configured = new Set(Object.keys(CONFIG.repos || {}));
   repos.sort((a, b) => {
-    const aRC = (CONFIG.repos && CONFIG.repos[a.name]) || {};
-    const bRC = (CONFIG.repos && CONFIG.repos[b.name]) || {};
+    const aRC = getRepoConfig(a.name);
+    const bRC = getRepoConfig(b.name);
     const aHasOrder = typeof aRC.order === "number";
     const bHasOrder = typeof bRC.order === "number";
     if (aHasOrder && bHasOrder) return aRC.order - bRC.order;
     if (aHasOrder !== bHasOrder) return aHasOrder ? -1 : 1;
-    const aPri = configured.has(a.name) ? 0 : 1;
-    const bPri = configured.has(b.name) ? 0 : 1;
-    if (aPri !== bPri) return aPri - bPri;
     if (sortBy === "stars") return b.stargazers_count - a.stargazers_count;
     if (sortBy === "updated") return new Date(b.updated_at) - new Date(a.updated_at);
     if (sortBy === "name") return a.name.localeCompare(b.name);
@@ -73,26 +57,27 @@ function escapeHTML(str) {
   return d.innerHTML;
 }
 
-function renderHeader(user) {
-  const name = CONFIG.title || user.name || user.login;
-  const login = user.login;
-
-  // Social links (always visible)
+function buildSocialLinks(user) {
   const githubUrl = CONFIG.github || user.html_url;
   const twitterHandle = CONFIG.twitter || user.twitter_username;
   const blogUrl = CONFIG.blog || user.blog;
-
-  const socialLinks = [];
+  const links = [];
   if (githubUrl)
-    socialLinks.push(`<a class="icon-btn" href="${githubUrl}" target="_blank" title="GitHub"><i data-lucide="github"></i></a>`);
+    links.push(`<a class="icon-btn icon-btn-social" href="${githubUrl}" target="_blank" title="GitHub"><i data-lucide="github"></i></a>`);
   if (twitterHandle) {
     const tUrl = twitterHandle.startsWith("http") ? twitterHandle : `https://x.com/${twitterHandle}`;
-    socialLinks.push(`<a class="icon-btn" href="${tUrl}" target="_blank" title="X / Twitter"><i data-lucide="twitter"></i></a>`);
+    links.push(`<a class="icon-btn icon-btn-social" href="${tUrl}" target="_blank" title="X / Twitter"><i data-lucide="twitter"></i></a>`);
   }
   if (blogUrl) {
     const url = blogUrl.startsWith("http") ? blogUrl : `https://${blogUrl}`;
-    socialLinks.push(`<a class="icon-btn" href="${url}" target="_blank" title="Website"><i data-lucide="globe"></i></a>`);
+    links.push(`<a class="icon-btn icon-btn-social" href="${url}" target="_blank" title="Website"><i data-lucide="globe"></i></a>`);
   }
+  return links.join("");
+}
+
+function renderHeader(user) {
+  const name = CONFIG.title || user.name || user.login;
+  const login = user.login;
 
   const devBtns = import.meta.env.DEV
     ? `<span class="nav-separator"></span>
@@ -108,21 +93,22 @@ function renderHeader(user) {
     : "";
 
   document.getElementById("navbar").innerHTML = `
-    <div class="nav-left"></div>
     <div class="nav-right">
-      ${socialLinks.join("")}
+      ${buildSocialLinks(user)}
       ${devBtns}
     </div>
   `;
 
   const bio = CONFIG.showBio && user.bio ? `<p class="subtitle">${escapeHTML(user.bio)}</p>` : "";
 
-  document.getElementById("page-title").innerHTML = `
+  const pageTitle = document.getElementById("page-title");
+  pageTitle.innerHTML = `
     <h1 class="title">
       <span class="title-name">${escapeHTML(name)}</span>
     </h1>
     ${bio}
   `;
+  pageTitle.style.textAlign = CONFIG.align || "left";
 
   document.title = `${name} — Portfolio`;
 
@@ -165,8 +151,7 @@ function renderCard(repo, index) {
        href="${link}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s;${bgImg}">
-      <div class="card-arrow"><i data-lucide="arrow-up-right"></i></div>
-      <div class="card-image"></div>
+      <div class="card-arrow"><i data-lucide="${hasExternalLink(repo) ? "globe" : "github"}"></i></div>
       <div class="card-footer">
         ${lang}
         <div class="card-title-row">
@@ -184,9 +169,6 @@ function renderGrid(repos) {
     filtered = filtered.filter(r => !isExcluded(r.name));
   }
   filtered = sortRepos(filtered);
-
-  if (CONFIG.maxRepos > 0)
-    filtered = filtered.slice(0, CONFIG.maxRepos);
 
   if (!filtered.length) {
     content.innerHTML = `<div class="loading" style="animation:none;opacity:1">No public repos found.</div>`;
@@ -214,8 +196,9 @@ async function handleSync() {
     const dataRes = await fetch("/data.json?t=" + Date.now());
     const data = await dataRes.json();
 
+    cachedData = data;
     renderHeader(data.user);
-    renderGrid(data.repos);
+    await renderWithDevConfig(data.repos);
   } catch (err) {
     console.error("Sync failed:", err);
   } finally {
@@ -258,55 +241,59 @@ function openSettings() {
         <button class="modal-close"><i data-lucide="x"></i></button>
       </div>
 
-      <div class="setting-group">
-        <label class="setting-label">Title</label>
-        <input class="setting-input" id="s-title" type="text"
-          value="${escapeHTML(CONFIG.title || "")}"
-          placeholder="${cachedData ? escapeHTML(cachedData.user.name || cachedData.user.login) : ""}">
-      </div>
-
-      <div class="setting-group">
-        <label class="setting-label">Bio</label>
-        <input class="setting-input" id="s-bio" type="text"
-          value="${cachedData ? escapeHTML(cachedData.user.bio || "") : ""}"
-          placeholder="Short description">
-      </div>
-
-      <div class="setting-group">
-        <div class="setting-row">
-          <span class="setting-row-label">Show bio</span>
-          <button class="setting-toggle ${CONFIG.showBio ? "on" : ""}" id="s-show-bio"></button>
+      <div class="setting-section">
+        <span class="setting-section-title">Profile</span>
+        <div class="setting-group">
+          <input class="setting-input" id="s-title" type="text"
+            value="${escapeHTML(CONFIG.title || (cachedData ? cachedData.user.name || cachedData.user.login : ""))}"
+            placeholder="Title">
+        </div>
+        <div class="setting-group">
+          <input class="setting-input" id="s-bio" type="text"
+            value="${cachedData ? escapeHTML(cachedData.user.bio || "") : ""}"
+            placeholder="Bio">
+        </div>
+        <div class="setting-row-pair">
+          <div class="setting-row">
+            <span class="setting-row-label">Show bio</span>
+            <button class="setting-toggle ${CONFIG.showBio ? "on" : ""}" id="s-show-bio"></button>
+          </div>
+          <div class="setting-row">
+            <span class="setting-row-label">Alignment</span>
+            <div class="setting-align">
+              <button class="setting-align-btn${(CONFIG.align || "left") === "left" ? " on" : ""}" data-align="left"><i data-lucide="align-left"></i></button>
+              <button class="setting-align-btn${(CONFIG.align || "left") === "center" ? " on" : ""}" data-align="center"><i data-lucide="align-center"></i></button>
+              <button class="setting-align-btn${(CONFIG.align || "left") === "right" ? " on" : ""}" data-align="right"><i data-lucide="align-right"></i></button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="setting-group">
+      <div class="setting-section">
+        <span class="setting-section-title">Appearance</span>
         <div class="setting-row">
           <span class="setting-row-label">Dark theme</span>
           <button class="setting-toggle ${getTheme() === "dark" ? "on" : ""}" id="s-theme"></button>
         </div>
       </div>
 
-      <div class="setting-divider"></div>
-
-      <div class="setting-group">
-        <label class="setting-label">GitHub</label>
-        <input class="setting-input" id="s-github" type="url"
-          value="${escapeHTML(CONFIG.github || (cachedData ? cachedData.user.html_url : ""))}"
-          placeholder="https://github.com/username">
-      </div>
-
-      <div class="setting-group">
-        <label class="setting-label">X / Twitter</label>
-        <input class="setting-input" id="s-twitter" type="text"
-          value="${escapeHTML(CONFIG.twitter || (cachedData ? cachedData.user.twitter_username || "" : ""))}"
-          placeholder="username">
-      </div>
-
-      <div class="setting-group">
-        <label class="setting-label">Website</label>
-        <input class="setting-input" id="s-blog" type="url"
-          value="${escapeHTML(CONFIG.blog || (cachedData ? cachedData.user.blog || "" : ""))}"
-          placeholder="https://example.com">
+      <div class="setting-section">
+        <span class="setting-section-title">Links</span>
+        <div class="setting-group">
+          <input class="setting-input" id="s-github" type="url"
+            value="${escapeHTML(CONFIG.github || (cachedData ? cachedData.user.html_url : ""))}"
+            placeholder="GitHub URL">
+        </div>
+        <div class="setting-group">
+          <input class="setting-input" id="s-twitter" type="text"
+            value="${escapeHTML(CONFIG.twitter || (cachedData ? cachedData.user.twitter_username || "" : ""))}"
+            placeholder="X / Twitter username">
+        </div>
+        <div class="setting-group">
+          <input class="setting-input" id="s-blog" type="url"
+            value="${escapeHTML(CONFIG.blog || (cachedData ? cachedData.user.blog || "" : ""))}"
+            placeholder="Website URL">
+        </div>
       </div>
     </div>
   `;
@@ -320,6 +307,15 @@ function openSettings() {
     btn.addEventListener("click", () => btn.classList.toggle("on"));
   });
 
+  // Alignment buttons
+  overlay.querySelectorAll(".setting-align-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      overlay.querySelectorAll(".setting-align-btn").forEach(b => b.classList.remove("on"));
+      btn.classList.add("on");
+      apply();
+    });
+  });
+
   // Apply changes in memory + live DOM update (no file save)
   const apply = () => {
     CONFIG.title = document.getElementById("s-title").value.trim();
@@ -329,6 +325,9 @@ function openSettings() {
     CONFIG.theme = isDark ? "dark" : "light";
     setTheme(CONFIG.theme);
 
+    const activeAlign = overlay.querySelector(".setting-align-btn.on");
+    CONFIG.align = activeAlign ? activeAlign.dataset.align : "left";
+
     CONFIG.github = document.getElementById("s-github").value.trim();
     CONFIG.twitter = document.getElementById("s-twitter").value.trim();
     CONFIG.blog = document.getElementById("s-blog").value.trim();
@@ -336,12 +335,16 @@ function openSettings() {
     if (cachedData) {
       cachedData.user.bio = document.getElementById("s-bio").value.trim();
       const user = cachedData.user;
-      const name = CONFIG.title || user.name || user.login;
+      const name = CONFIG.title;
+
+      // Update alignment
+      const pageTitle = document.getElementById("page-title");
+      if (pageTitle) pageTitle.style.textAlign = CONFIG.align || "left";
 
       // Update title
       const titleEl = document.querySelector(".title-name");
       if (titleEl) titleEl.textContent = name;
-      document.title = `${name} — Portfolio`;
+      document.title = name ? `${name} — Portfolio` : "Portfolio";
 
       // Update bio
       const existing = document.querySelector(".subtitle");
@@ -358,7 +361,24 @@ function openSettings() {
         existing.remove();
       }
 
-      // Update grid (sort, maxRepos)
+      // Update social links in navbar
+      const navRight = document.querySelector(".nav-right");
+      if (navRight) {
+        navRight.querySelectorAll(".icon-btn-social").forEach(el => el.remove());
+        const temp = document.createElement("div");
+        temp.innerHTML = buildSocialLinks(user);
+        const fragment = document.createDocumentFragment();
+        while (temp.firstChild) fragment.appendChild(temp.firstChild);
+        const separator = navRight.querySelector(".nav-separator");
+        if (separator) {
+          navRight.insertBefore(fragment, separator);
+        } else {
+          navRight.appendChild(fragment);
+        }
+        refreshIcons();
+      }
+
+      // Update grid
       renderGrid(cachedData.repos);
     }
   };
@@ -382,7 +402,7 @@ function openSettings() {
   });
 
   // Live preview: apply in-memory on each change
-  overlay.querySelectorAll(".setting-input, .setting-select").forEach((el) => {
+  overlay.querySelectorAll(".setting-input").forEach((el) => {
     el.addEventListener("change", apply);
   });
   overlay.querySelectorAll(".setting-toggle").forEach((btn) => {

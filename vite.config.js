@@ -76,6 +76,47 @@ function syncPlugin() {
         }
       });
 
+      server.middlewares.use("/__list-images", (req, res) => {
+        res.setHeader("Content-Type", "application/json");
+        try {
+          const imagesDir = path.join(process.cwd(), "images");
+          if (!fs.existsSync(imagesDir)) {
+            res.end(JSON.stringify({ ok: true, images: [] }));
+            return;
+          }
+          const files = fs.readdirSync(imagesDir)
+            .filter(f => /\.(png|jpe?g|gif|webp|svg)$/i.test(f))
+            .map(f => `images/${f}`);
+          res.end(JSON.stringify({ ok: true, images: files }));
+        } catch (e) {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ ok: false, error: e.message }));
+        }
+      });
+
+      server.middlewares.use("/__delete-image", async (req, res) => {
+        res.setHeader("Content-Type", "application/json");
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ ok: false, error: "POST only" }));
+          return;
+        }
+        try {
+          const { imagePath } = await readBody(req);
+          const full = path.join(process.cwd(), imagePath);
+          if (!full.startsWith(path.join(process.cwd(), "images"))) {
+            res.statusCode = 403;
+            res.end(JSON.stringify({ ok: false, error: "Forbidden" }));
+            return;
+          }
+          if (fs.existsSync(full)) fs.unlinkSync(full);
+          res.end(JSON.stringify({ ok: true }));
+        } catch (e) {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ ok: false, error: e.message }));
+        }
+      });
+
       server.middlewares.use("/__upload-image", async (req, res) => {
         res.setHeader("Content-Type", "application/json");
         if (req.method !== "POST") {

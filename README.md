@@ -25,7 +25,7 @@ In dev mode you get:
 - Drag & drop to reorder cards
 - Click the eye icon on any card to show/hide it
 - Upload screenshots per repo
-- Settings modal (gear icon) for title, bio, theme, social links
+- Settings modal (gear icon) for title, bio, alignment, theme, social links
 
 When you're happy with the result:
 
@@ -45,6 +45,7 @@ export default {
   title: "",              // Custom title (default: GitHub name)
   showBio: true,          // Show GitHub bio under title
   theme: "light",         // "light" or "dark"
+  align: "left",          // Title/bio alignment: "left", "center", "right"
   github: "",             // Override GitHub profile URL
   twitter: "",            // Twitter/X handle
   blog: "",               // Website URL
