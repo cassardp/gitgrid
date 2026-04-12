@@ -1,21 +1,14 @@
 import CONFIG from "./config.js";
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image } from "lucide";
 
 let cachedData = null;
 let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image } });
+  document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
-function setTheme(t) {
-  document.documentElement.setAttribute("data-theme", t);
-  localStorage.setItem("theme", t);
-}
-
-function getTheme() {
-  return localStorage.getItem("theme") || CONFIG.theme || "light";
-}
 
 
 function getRepoConfig(name) {
@@ -90,28 +83,28 @@ function renderHeader(user) {
   const name = CONFIG.title || user.name || user.login;
   const login = user.login;
 
-  const devBtns = import.meta.env.DEV
-    ? `<span class="nav-separator"></span>
-        <button class="icon-btn" id="sync-btn" title="Sync from GitHub">
-          <i data-lucide="refresh-cw"></i>
-        </button>
-        <button class="icon-btn" id="preview-btn" title="Dev mode">
-          <i data-lucide="code"></i>
-        </button>
-        <button class="icon-btn" id="settings-btn" title="Settings">
-          <i data-lucide="settings"></i>
-        </button>`
-    : "";
-
-  document.getElementById("navbar").innerHTML = `
-    <div class="nav-right">
-      ${buildSocialLinks(user)}
-      ${devBtns}
-    </div>
-  `;
+  if (import.meta.env.DEV && !document.getElementById("dev-palette")) {
+    const palette = document.createElement("div");
+    palette.id = "dev-palette";
+    palette.innerHTML = `
+      <button class="icon-btn" id="sync-btn" title="Sync from GitHub">
+        <i data-lucide="refresh-cw"></i>
+      </button>
+      <button class="icon-btn" id="preview-btn" title="Preview production">
+        <i data-lucide="globe"></i>
+      </button>
+      <button class="icon-btn" id="settings-btn" title="Settings">
+        <i data-lucide="settings"></i>
+      </button>
+    `;
+    document.body.appendChild(palette);
+  }
 
   const bioText = CONFIG.bio || user.bio;
   const bio = CONFIG.showBio && bioText ? `<p class="subtitle">${escapeHTML(bioText)}</p>` : "";
+
+  const socialHTML = buildSocialLinks(user);
+  const socialRow = socialHTML ? `<div class="social-links">${socialHTML}</div>` : "";
 
   const pageTitle = document.getElementById("page-title");
   pageTitle.innerHTML = `
@@ -119,6 +112,7 @@ function renderHeader(user) {
       <span class="title-name">${escapeHTML(name)}</span>
     </h1>
     ${bio}
+    ${socialRow}
   `;
   pageTitle.style.textAlign = CONFIG.align || "left";
 
@@ -235,12 +229,16 @@ async function handlePreview() {
   previewMode = !previewMode;
   const btn = document.getElementById("preview-btn");
   if (btn) {
-    btn.title = previewMode ? "Production mode" : "Dev mode";
+    btn.title = previewMode ? "Back to dev" : "Preview production";
     btn.innerHTML = previewMode
-      ? `<i data-lucide="globe"></i>`
-      : `<i data-lucide="code"></i>`;
+      ? `<i data-lucide="code"></i>`
+      : `<i data-lucide="globe"></i>`;
     refreshIcons();
   }
+  const syncBtn = document.getElementById("sync-btn");
+  const settingsBtn = document.getElementById("settings-btn");
+  if (syncBtn) syncBtn.style.display = previewMode ? "none" : "";
+  if (settingsBtn) settingsBtn.style.display = previewMode ? "none" : "";
   if (cachedData) await renderWithDevConfig(cachedData.repos);
 }
 
@@ -282,14 +280,6 @@ function openSettings() {
               <button class="setting-align-btn${(CONFIG.align || "left") === "right" ? " on" : ""}" data-align="right"><i data-lucide="align-right"></i></button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="setting-section">
-        <span class="setting-section-title">Appearance</span>
-        <div class="setting-row">
-          <span class="setting-row-label">Dark theme</span>
-          <button class="setting-toggle ${getTheme() === "dark" ? "on" : ""}" id="s-theme"></button>
         </div>
       </div>
 
@@ -356,10 +346,6 @@ function openSettings() {
     CONFIG.title = document.getElementById("s-title").value.trim();
     CONFIG.showBio = document.getElementById("s-show-bio").classList.contains("on");
 
-    const isDark = document.getElementById("s-theme").classList.contains("on");
-    CONFIG.theme = isDark ? "dark" : "light";
-    setTheme(CONFIG.theme);
-
     const headerAlignBtn = overlay.querySelector('.setting-align[data-target="header"] .setting-align-btn.on');
     CONFIG.align = headerAlignBtn ? headerAlignBtn.dataset.align : "left";
 
@@ -409,22 +395,22 @@ function openSettings() {
       }
       if (footerEl) footerEl.style.textAlign = CONFIG.footerAlign || "center";
 
-      // Update social links in navbar
-      const navRight = document.querySelector(".nav-right");
-      if (navRight) {
-        navRight.querySelectorAll(".icon-btn-social").forEach(el => el.remove());
-        const temp = document.createElement("div");
-        temp.innerHTML = buildSocialLinks(user);
-        const fragment = document.createDocumentFragment();
-        while (temp.firstChild) fragment.appendChild(temp.firstChild);
-        const separator = navRight.querySelector(".nav-separator");
-        if (separator) {
-          navRight.insertBefore(fragment, separator);
+      // Update social links under bio
+      const existingSocial = pageTitle.querySelector(".social-links");
+      const newSocialHTML = buildSocialLinks(user);
+      if (newSocialHTML) {
+        if (existingSocial) {
+          existingSocial.innerHTML = newSocialHTML;
         } else {
-          navRight.appendChild(fragment);
+          const div = document.createElement("div");
+          div.className = "social-links";
+          div.innerHTML = newSocialHTML;
+          pageTitle.appendChild(div);
         }
-        refreshIcons();
+      } else if (existingSocial) {
+        existingSocial.remove();
       }
+      refreshIcons();
 
       // Update grid
       renderGrid(cachedData.repos);
@@ -459,8 +445,6 @@ function openSettings() {
 }
 
 async function init() {
-  setTheme(getTheme());
-
   try {
     const res = await fetch("/data.json");
     if (!res.ok) throw new Error("data.json not found. Run: npm run sync");

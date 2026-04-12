@@ -46,5 +46,9 @@ export default {
   },
   github: "https://github.com/cassardp",
   twitter: "patricecassard",
-  blog: ""
+  blog: "https://gitgrid.vercel.app",
+  align: "center",
+  footerAlign: "center",
+  footer: "",
+  bio: ""
 };

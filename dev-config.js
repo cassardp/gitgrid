@@ -1,5 +1,10 @@
 import { createIcons, X, Upload, Eye, EyeOff, Image, Trash2 } from "lucide";
 
+function renderIcons(icons) {
+  createIcons({ icons, nameAttr: "data-lucide" });
+  document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
+}
+
 let workingConfig = null;
 let saveTimer = null;
 let stylesInjected = false;
@@ -468,7 +473,7 @@ function addRemoveButton(card, repo) {
     applyImage(card, repo, null);
   });
   card.appendChild(btn);
-  createIcons({ icons: { X }, nameAttr: "data-lucide" });
+  renderIcons({ X });
 }
 
 function applyImage(card, repo, imagePath) {
@@ -503,7 +508,7 @@ function addPlaceholder(card, repo) {
     openImagePicker(card, repo);
   });
   card.appendChild(btn);
-  createIcons({ icons: { Image }, nameAttr: "data-lucide" });
+  renderIcons({ Image });
 }
 
 async function openImagePicker(card, repo) {
@@ -543,7 +548,7 @@ async function openImagePicker(card, repo) {
 
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add("visible"));
-  createIcons({ icons: { X, Upload, Trash2, Image }, nameAttr: "data-lucide" });
+  renderIcons({ X, Upload, Trash2, Image });
 
   const close = () => {
     overlay.classList.remove("visible");
@@ -660,11 +665,11 @@ function setupVisibilityToggle(card, repo) {
     arrow.innerHTML = nowHidden
       ? `<i data-lucide="eye-off"></i>`
       : `<i data-lucide="eye"></i>`;
-    createIcons({ icons: { Eye, EyeOff }, nameAttr: "data-lucide" });
+    renderIcons({ Eye, EyeOff });
     debouncedSave();
   });
 
-  createIcons({ icons: { Eye, EyeOff }, nameAttr: "data-lucide" });
+  renderIcons({ Eye, EyeOff });
 }
 
 export function initDevConfig(config, repos) {
