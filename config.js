@@ -1,6 +1,6 @@
 export default {
   username: "cassardp",
-  title: "Patrice Cassard",
+  title: "",
   showBio: true,
   theme: "light",
   exclude: [],
@@ -13,16 +13,15 @@ export default {
     },
     gribli: {
       size: "small",
-      order: 1,
-      hidden: true
+      order: 3
     },
     Screan: {
       size: "small",
-      order: 0
+      order: 1
     },
     Pinpin: {
       size: "small",
-      order: 3
+      order: 4
     },
     Paaage: {
       size: "small",
@@ -30,23 +29,22 @@ export default {
     },
     iconlab: {
       size: "medium",
-      order: 5
+      order: 6
     },
     gribli_web: {
       hidden: true
     },
     gitgrid: {
-      order: 4
+      order: 5
     },
     capelo: {
-      order: 6
+      order: 7
     },
     Keblo: {
-      order: 7
+      order: 0
     }
   },
   github: "https://github.com/cassardp",
   twitter: "patricecassard",
-  blog: "",
-  align: "left"
+  blog: ""
 };

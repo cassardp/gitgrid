@@ -5,18 +5,25 @@ let saveTimer = null;
 let stylesInjected = false;
 let filteredRepos = null;
 let dragState = null;
+let dragListenersAttached = false;
 
 function injectStyles() {
   if (stylesInjected) return;
   stylesInjected = true;
   const style = document.createElement("style");
   style.textContent = `
-    .card.dev-drag-ghost {
-      border: 2px dashed #3b82f6 !important;
-      background: rgba(59, 130, 246, 0.06) !important;
+    .dev-drag-placeholder {
+      border: 2px dashed var(--icon-border) !important;
+      background: transparent !important;
+      border-radius: var(--radius);
+      aspect-ratio: 1;
       box-shadow: none !important;
     }
-    .card.dev-drag-ghost > * { visibility: hidden; }
+    .card.dev-dragging {
+      box-shadow: 0 12px 32px rgba(0,0,0,0.18) !important;
+      opacity: 0.92;
+      cursor: grabbing;
+    }
     .dev-remove-img {
       position: absolute;
       top: 18px;
@@ -226,74 +233,225 @@ async function handleImageDrop(name, file) {
 }
 
 function setupDrag(card, repo) {
-  const name = repo.name;
+  var name = repo.name;
 
-  card.draggable = true;
+  card.addEventListener("pointerdown", function (e) {
+    if (e.target.closest("button, .card-arrow, input")) return;
+    if (e.button !== 0) return;
 
-  card.addEventListener("dragstart", (e) => {
-    e.dataTransfer.setData("text/plain", name);
-    e.dataTransfer.effectAllowed = "move";
-    dragState = { name, card, originalNext: card.nextSibling };
-    requestAnimationFrame(() => card.classList.add("dev-drag-ghost"));
+    var rect = card.getBoundingClientRect();
+    dragState = {
+      card: card,
+      name: name,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      width: rect.width,
+      height: rect.height,
+      moved: false,
+      placeholder: null,
+      grid: null,
+      rafId: null,
+    };
   });
 
-  card.addEventListener("dragend", () => {
+  // File drop support (external image files only)
+  card.addEventListener("dragover", function (e) {
+    if (e.dataTransfer && e.dataTransfer.types.indexOf("Files") !== -1) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    }
+  });
+
+  card.addEventListener("drop", function (e) {
+    if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+    var file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleImageDrop(name, file);
+    }
+  });
+}
+
+function getGridSlot(cx, cy, grid, draggedCard) {
+  var style = getComputedStyle(grid);
+  var cols = style.gridTemplateColumns.split(" ").length;
+  var gap = parseFloat(style.gap) || 0;
+  var rect = grid.getBoundingClientRect();
+  var cellW = (rect.width - gap * (cols - 1)) / cols;
+  var cellH = cellW;
+
+  var x = cx - rect.left;
+  var y = cy - rect.top;
+  var col = Math.max(0, Math.min(Math.floor(x / (cellW + gap)), cols - 1));
+  var row = Math.max(0, Math.floor(y / (cellH + gap)));
+
+  var count = 0;
+  for (var i = 0; i < grid.children.length; i++) {
+    if (grid.children[i] !== draggedCard) count++;
+  }
+
+  return Math.max(0, Math.min(row * cols + col, count - 1));
+}
+
+function movePlaceholder(grid, placeholder, targetIndex, draggedCard) {
+  var children = [];
+  for (var i = 0; i < grid.children.length; i++) {
+    if (grid.children[i] !== draggedCard) children.push(grid.children[i]);
+  }
+
+  var currentIndex = children.indexOf(placeholder);
+  if (currentIndex === targetIndex) return;
+
+  // FLIP — First: record card positions before move
+  var cards = [];
+  var firsts = [];
+  for (var i = 0; i < children.length; i++) {
+    if (children[i] !== placeholder) {
+      cards.push(children[i]);
+      firsts.push(children[i].getBoundingClientRect());
+    }
+  }
+
+  // Move placeholder to new position
+  placeholder.remove();
+  var remaining = [];
+  for (var i = 0; i < grid.children.length; i++) {
+    if (grid.children[i] !== draggedCard) remaining.push(grid.children[i]);
+  }
+  if (targetIndex >= remaining.length) {
+    grid.appendChild(placeholder);
+  } else {
+    grid.insertBefore(placeholder, remaining[targetIndex]);
+  }
+
+  // FLIP — Last + Invert: apply inverse transforms
+  var moved = [];
+  for (var i = 0; i < cards.length; i++) {
+    var last = cards[i].getBoundingClientRect();
+    var dx = firsts[i].left - last.left;
+    var dy = firsts[i].top - last.top;
+    if (dx === 0 && dy === 0) continue;
+    cards[i].style.transition = "none";
+    cards[i].style.transform = "translate(" + dx + "px," + dy + "px)";
+    moved.push(cards[i]);
+  }
+
+  // FLIP — Play: animate to final position
+  void grid.offsetHeight;
+  for (var i = 0; i < moved.length; i++) {
+    moved[i].style.transition = "transform 0.2s ease";
+    moved[i].style.transform = "";
+  }
+}
+
+function setupDocumentDragListeners() {
+  if (dragListenersAttached) return;
+  dragListenersAttached = true;
+
+  document.addEventListener("pointermove", function (e) {
     if (!dragState) return;
-    dragState.card.classList.remove("dev-drag-ghost");
-    const grid = dragState.card.closest(".grid");
-    if (dragState.originalNext) {
-      grid.insertBefore(dragState.card, dragState.originalNext);
-    } else {
-      grid.appendChild(dragState.card);
+
+    var ds = dragState;
+
+    if (!ds.moved) {
+      var dx = e.clientX - ds.startX;
+      var dy = e.clientY - ds.startY;
+      if (dx * dx + dy * dy < 25) return;
+
+      ds.moved = true;
+      var grid = ds.card.closest(".grid");
+      ds.grid = grid;
+
+      var placeholder = document.createElement("div");
+      placeholder.className = "dev-drag-placeholder";
+      grid.insertBefore(placeholder, ds.card);
+      ds.placeholder = placeholder;
+
+      ds.card.style.position = "fixed";
+      ds.card.style.zIndex = "1000";
+      ds.card.style.width = ds.width + "px";
+      ds.card.style.height = ds.height + "px";
+      ds.card.style.transition = "box-shadow 0.2s, opacity 0.2s";
+      ds.card.style.pointerEvents = "none";
+      ds.card.style.margin = "0";
+      ds.card.classList.add("dev-dragging");
+
+      document.body.style.userSelect = "none";
+      document.body.style.cursor = "grabbing";
     }
-    dragState = null;
+
+    if (ds.moved) {
+      ds.card.style.left = (e.clientX - ds.offsetX) + "px";
+      ds.card.style.top = (e.clientY - ds.offsetY) + "px";
+
+      if (ds.rafId) cancelAnimationFrame(ds.rafId);
+      var cx = e.clientX, cy = e.clientY;
+      ds.rafId = requestAnimationFrame(function () {
+        if (!dragState || !dragState.moved) return;
+        var slot = getGridSlot(cx, cy, ds.grid, ds.card);
+        movePlaceholder(ds.grid, ds.placeholder, slot, ds.card);
+      });
+    }
   });
 
-  card.addEventListener("dragover", (e) => {
-    e.preventDefault();
+  document.addEventListener("pointerup", function () {
+    if (!dragState) return;
 
-    if (dragState) {
-      e.dataTransfer.dropEffect = "move";
-      if (dragState.name === name) return;
-      const rect = card.getBoundingClientRect();
-      const before = e.clientY < rect.top + rect.height / 2;
-      const grid = card.closest(".grid");
-      if (before) {
-        grid.insertBefore(dragState.card, card);
-      } else {
-        grid.insertBefore(dragState.card, card.nextSibling);
-      }
-    }
-  });
+    var ds = dragState;
 
-  card.addEventListener("drop", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (ds.moved) {
+      if (ds.rafId) cancelAnimationFrame(ds.rafId);
 
-    // Card reorder
-    if (dragState) {
-      dragState.card.classList.remove("dev-drag-ghost");
-      const grid = card.closest(".grid");
-      if (grid && filteredRepos) {
-        const repoMap = new Map(filteredRepos.map((r) => [r.name, r]));
-        const domCards = grid.querySelectorAll("[data-repo]");
+      var card = ds.card;
+      var grid = ds.grid;
+
+      grid.insertBefore(card, ds.placeholder);
+      ds.placeholder.remove();
+
+      card.style.position = "";
+      card.style.zIndex = "";
+      card.style.width = "";
+      card.style.height = "";
+      card.style.left = "";
+      card.style.top = "";
+      card.style.transition = "";
+      card.style.pointerEvents = "";
+      card.style.margin = "";
+      card.classList.remove("dev-dragging");
+
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+
+      // Clear any leftover FLIP transforms
+      var allCards = grid.querySelectorAll(".card");
+      allCards.forEach(function (c) {
+        c.style.transition = "";
+        c.style.transform = "";
+      });
+
+      if (filteredRepos) {
+        var repoMap = new Map(filteredRepos.map(function (r) { return [r.name, r]; }));
+        var domCards = grid.querySelectorAll("[data-repo]");
         filteredRepos.length = 0;
-        domCards.forEach((c) => {
-          const r = repoMap.get(c.dataset.repo);
+        domCards.forEach(function (c) {
+          var r = repoMap.get(c.dataset.repo);
           if (r) filteredRepos.push(r);
         });
-        filteredRepos.forEach((r, i) => {
+        filteredRepos.forEach(function (r, i) {
           getRC(r.name).order = i;
         });
         debouncedSave();
       }
-      dragState = null;
-      return;
+
+      card.addEventListener("click", function (ev) {
+        ev.preventDefault();
+      }, { once: true });
     }
 
-    // Image file drop
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) handleImageDrop(name, file);
+    dragState = null;
   });
 }
 
@@ -513,6 +671,7 @@ export function initDevConfig(config, repos) {
   workingConfig = config;
   filteredRepos = repos;
   injectStyles();
+  setupDocumentDragListeners();
   const cards = document.querySelectorAll(".card");
   cards.forEach((card, i) => {
     if (repos[i]) {
