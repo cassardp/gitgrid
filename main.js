@@ -381,22 +381,26 @@ function openSettings() {
 
       <div class="setting-section">
         <span class="setting-section-title">Links</span>
-        <div class="setting-group">
+        <div class="setting-group input-icon">
+          <i data-lucide="github"></i>
           <input class="setting-input" id="s-github" type="url"
             value="${escapeHTML(CONFIG.github || (cachedData ? cachedData.user.html_url : ""))}"
             placeholder="GitHub URL">
         </div>
-        <div class="setting-group">
+        <div class="setting-group input-icon">
+          <i data-lucide="twitter"></i>
           <input class="setting-input" id="s-twitter" type="text"
             value="${escapeHTML(CONFIG.twitter || (cachedData ? cachedData.user.twitter_username || "" : ""))}"
             placeholder="X / Twitter username">
         </div>
-        <div class="setting-group">
+        <div class="setting-group input-icon">
+          <i data-lucide="globe"></i>
           <input class="setting-input" id="s-blog" type="url"
             value="${escapeHTML(CONFIG.blog || (cachedData ? cachedData.user.blog || "" : ""))}"
             placeholder="Website URL">
         </div>
-        <div class="setting-group">
+        <div class="setting-group input-icon">
+          <i data-lucide="mail"></i>
           <input class="setting-input" id="s-email" type="email"
             value="${escapeHTML(CONFIG.email || "")}"
             placeholder="Email">
@@ -448,7 +452,7 @@ function openSettings() {
           <svg class="setting-danger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </summary>
         <div class="setting-danger-content">
-          <p style="font-size:13px;color:var(--text-2);margin:0 0 12px">This will permanently delete your account, config, and all uploaded images.</p>
+          <p style="font-size:13px;margin:0 0 12px">This will permanently delete your account, config, and all uploaded images.</p>
           <div class="setting-group">
             <input class="setting-input" id="s-delete-confirm" type="text"
               placeholder="Type ${escapeHTML(currentUser.username)} to confirm">
@@ -617,9 +621,10 @@ async function init() {
     // Landing page
     document.getElementById("content").innerHTML = `
       <div style="display:flex;align-items:center;justify-content:center;min-height:80vh;">
-        <a href="/api/auth/login" style="display:inline-block;padding:12px 24px;background:var(--text);color:var(--surface);border-radius:10px;text-decoration:none;font-weight:500;">Login with GitHub</a>
+        <a href="/api/auth/login" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--text);color:var(--surface);border-radius:10px;text-decoration:none;font-weight:500;"><i data-lucide="github" style="width:18px;height:18px;"></i>Login with GitHub</a>
       </div>
     `;
+    refreshIcons();
     return;
   }
 

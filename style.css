@@ -154,7 +154,7 @@ body {
 
 .social-links {
   display: flex;
-  gap: 6px;
+  gap: 24px;
   margin-top: 16px;
 }
 
@@ -162,6 +162,8 @@ body {
   border: none;
   background: none;
   color: var(--text-3);
+  width: auto;
+  height: auto;
 }
 
 .social-links .icon-btn svg {
@@ -550,6 +552,25 @@ body {
   margin-bottom: 10px;
 }
 
+.input-icon {
+  position: relative;
+}
+
+.input-icon svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.input-icon .setting-input {
+  padding-left: 36px;
+}
+
 .setting-row-pair {
   display: flex;
   gap: 20px;
@@ -659,6 +680,14 @@ body {
   transform: translateX(16px);
 }
 
+.setting-danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #fecaca;
+}
+
 .setting-danger summary {
   list-style: none;
 }
@@ -680,17 +709,29 @@ body {
 }
 
 .setting-danger-chevron {
-  color: var(--text-3);
+  color: var(--danger);
   transition: transform 0.2s;
-  transform: rotate(180deg);
 }
 
 .setting-danger[open] .setting-danger-chevron {
-  transform: rotate(0deg);
+  transform: rotate(180deg);
 }
 
 .setting-danger-content {
   margin-top: 14px;
+}
+
+.setting-danger-content p {
+  color: #991b1b;
+}
+
+.setting-danger .setting-input {
+  background: white;
+  border-color: #fca5a5;
+}
+
+.setting-danger .setting-input:focus {
+  border-color: var(--danger);
 }
 
 .setting-delete-btn {
