@@ -3,6 +3,8 @@ const GITHUB_TOKEN = 'https://github.com/login/oauth/access_token';
 const GITHUB_USER = 'https://api.github.com/user';
 const COOKIE_NAME = 'gitgrid_session';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+const STATE_COOKIE = 'gitgrid_oauth_state';
+const STATE_MAX_AGE = 600; // 10 minutes
 
 async function sign(payload: string, key: string): Promise<string> {
 	const enc = new TextEncoder();
@@ -33,6 +35,27 @@ function sessionCookie(value: string, maxAge: number): string {
 	return `${COOKIE_NAME}=${value}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${maxAge}`;
 }
 
+async function getEncryptionKey(hmacKey: string): Promise<CryptoKey> {
+	const raw = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(hmacKey + ':encrypt'));
+	return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+}
+
+async function encryptToken(token: string, hmacKey: string): Promise<string> {
+	const key = await getEncryptionKey(hmacKey);
+	const iv = crypto.getRandomValues(new Uint8Array(12));
+	const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(token));
+	return `enc:${btoa(String.fromCharCode(...iv))}:${btoa(String.fromCharCode(...new Uint8Array(ct)))}`;
+}
+
+export async function decryptToken(stored: string, hmacKey: string): Promise<string> {
+	if (!stored.startsWith('enc:')) return stored;
+	const [, ivB64, ctB64] = stored.split(':');
+	const key = await getEncryptionKey(hmacKey);
+	const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+	const ct = Uint8Array.from(atob(ctB64), c => c.charCodeAt(0));
+	return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct));
+}
+
 export async function getSessionUser(request: Request, env: Env) {
 	const header = request.headers.get('Cookie') || '';
 	const match = header.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
@@ -44,14 +67,28 @@ export async function getSessionUser(request: Request, env: Env) {
 }
 
 export async function handleLogin(env: Env): Promise<Response> {
-	const url = `${GITHUB_AUTHORIZE}?client_id=${env.GITHUB_CLIENT_ID}`;
-	return Response.redirect(url, 302);
+	const state = crypto.randomUUID();
+	const url = `${GITHUB_AUTHORIZE}?client_id=${env.GITHUB_CLIENT_ID}&state=${state}`;
+	return new Response(null, {
+		status: 302,
+		headers: {
+			'Location': url,
+			'Set-Cookie': `${STATE_COOKIE}=${state}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${STATE_MAX_AGE}`,
+		},
+	});
 }
 
 export async function handleCallback(request: Request, env: Env): Promise<Response> {
 	const url = new URL(request.url);
 	const code = url.searchParams.get('code');
-	if (!code) return new Response('Missing code', { status: 400 });
+	const state = url.searchParams.get('state');
+	if (!code || !state) return new Response('Missing code or state', { status: 400 });
+
+	const cookieHeader = request.headers.get('Cookie') || '';
+	const stateMatch = cookieHeader.match(new RegExp(`${STATE_COOKIE}=([^;]+)`));
+	if (!stateMatch || stateMatch[1] !== state) {
+		return new Response('Invalid state', { status: 403 });
+	}
 
 	// Exchange code for access token
 	const tokenRes = await fetch(GITHUB_TOKEN, {
@@ -88,26 +125,27 @@ export async function handleCallback(request: Request, env: Env): Promise<Respon
 	const existing = await env.DB.prepare('SELECT id FROM users WHERE github_id = ?').bind(ghUser.id).first();
 	let userId: number;
 
+	const encAccessToken = await encryptToken(tokenData.access_token, env.HMAC_KEY);
+	const encRefreshToken = tokenData.refresh_token ? await encryptToken(tokenData.refresh_token, env.HMAC_KEY) : null;
+
 	if (existing) {
 		userId = existing.id as number;
 		await env.DB.prepare(
 			'UPDATE users SET username = ?, access_token = ?, refresh_token = ?, updated_at = datetime(\'now\') WHERE id = ?'
-		).bind(ghUser.login, tokenData.access_token, tokenData.refresh_token || null, userId).run();
+		).bind(ghUser.login, encAccessToken, encRefreshToken, userId).run();
 	} else {
 		const result = await env.DB.prepare(
 			'INSERT INTO users (github_id, username, access_token, refresh_token) VALUES (?, ?, ?, ?)'
-		).bind(ghUser.id, ghUser.login, tokenData.access_token, tokenData.refresh_token || null).run();
+		).bind(ghUser.id, ghUser.login, encAccessToken, encRefreshToken).run();
 		userId = result.meta.last_row_id as number;
 	}
 
 	const signed = await sign(String(userId), env.HMAC_KEY);
-	return new Response(null, {
-		status: 302,
-		headers: {
-			'Location': `/${ghUser.login}`,
-			'Set-Cookie': sessionCookie(signed, COOKIE_MAX_AGE),
-		},
-	});
+	const headers = new Headers();
+	headers.set('Location', `/${ghUser.login}`);
+	headers.append('Set-Cookie', sessionCookie(signed, COOKIE_MAX_AGE));
+	headers.append('Set-Cookie', `${STATE_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0`);
+	return new Response(null, { status: 302, headers });
 }
 
 export async function handleLogout(): Promise<Response> {

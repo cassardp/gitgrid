@@ -1,4 +1,4 @@
-import { getSessionUser } from './auth';
+import { getSessionUser, decryptToken } from './auth';
 
 const GITHUB_API = 'https://api.github.com';
 
@@ -10,10 +10,12 @@ export async function handleSync(request: Request, env: Env): Promise<Response> 
 		.bind(user.id).first();
 	if (!dbUser) return Response.json({ error: 'User not found' }, { status: 404 });
 
+	const token = await decryptToken(dbUser.access_token as string, env.HMAC_KEY);
+
 	// Fetch GitHub profile
-	const profileRes = await fetch(`${GITHUB_API}/users/${dbUser.username}`, {
+	const profileRes = await fetch(`${GITHUB_API}/users/${encodeURIComponent(dbUser.username as string)}`, {
 		headers: {
-			'Authorization': `Bearer ${dbUser.access_token}`,
+			'Authorization': `Bearer ${token}`,
 			'User-Agent': 'GitGrid',
 			'Accept': 'application/json',
 		},
@@ -28,7 +30,7 @@ export async function handleSync(request: Request, env: Env): Promise<Response> 
 		const res = await fetch(
 			`${GITHUB_API}/user/repos?per_page=100&page=${page}&type=owner&sort=updated`, {
 			headers: {
-				'Authorization': `Bearer ${dbUser.access_token}`,
+				'Authorization': `Bearer ${token}`,
 				'User-Agent': 'GitGrid',
 				'Accept': 'application/json',
 			},

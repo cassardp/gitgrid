@@ -32,21 +32,21 @@ Vanilla JS portfolio platform deployed on Cloudflare Workers + D1 + R2. Users lo
 ### Worker (`gitgrid-worker/`)
 
 - **src/index.ts** — Router: `/api/*` → handlers, `/img/*` → R2 serve, `/:username` → inject OG meta tags from D1, else → `env.ASSETS.fetch()` (SPA fallback)
-- **src/auth.ts** — GitHub App install+auth flow (login → callback → session cookie HMAC-SHA256 signed), session verification, account deletion
-- **src/config.ts** — GET/PUT user config
+- **src/auth.ts** — GitHub App install+auth flow (login → callback → session cookie HMAC-SHA256 signed), session verification, account deletion. OAuth `state` parameter for CSRF protection. Access tokens encrypted at rest (AES-256-GCM derived from HMAC_KEY, format `enc:iv:ct`, backward-compatible with plaintext).
+- **src/config.ts** — GET/PUT user config. PUT validates: allowed fields whitelist, enum values, type checks, string length (500), total size (50KB).
 - **src/sync.ts** — POST: fetch GitHub profile + repos (public + private) with user's token → store in D1 `repos_data`
-- **src/images.ts** — Upload/list/delete images via R2, serve with immutable cache
+- **src/images.ts** — Upload/list/delete images via R2, serve with immutable cache + `nosniff`. Upload validates: content-type whitelist (webp/png/jpeg/gif), 5MB max, repo name regex.
 - **src/portfolio.ts** — GET public: config + repos + user. Visitors see public repos + private repos with homepage only. Owner sees all. Zero GitHub API calls.
 - **schema.sql** — D1 schema: `users` (github_id, username, access_token, config JSON, repos_data JSON) + `images` (user_id, r2_key, repo_name)
 - **wrangler.jsonc** — Bindings: D1, R2, ASSETS with `run_worker_first: true` + SPA fallback
 
 ### Data flow
 
-- **Auth**: GitHub App installation flow (`/apps/gitgrid-app/installations/new`) → OAuth callback → user access token → D1. Session = HMAC-signed user ID in HttpOnly cookie. Timing-safe HMAC verification via `crypto.subtle.verify`.
+- **Auth**: GitHub App installation flow (`/apps/gitgrid-app/installations/new`) → OAuth callback → user access token (encrypted AES-GCM) → D1. OAuth uses `state` parameter (random UUID in cookie) for CSRF protection. Session = HMAC-signed user ID in HttpOnly cookie. Timing-safe HMAC verification via `crypto.subtle.verify`.
 - **Sync**: User's token → GitHub API (profile + all repos, public + private) → D1 `repos_data`. Each user uses their own rate limit (5000 req/h).
 - **Public pages**: Served from D1 `repos_data` cache, zero GitHub API calls. Private repos without homepage are filtered out for visitors. OG meta tags (title, bio, avatar) injected server-side for `/:username` routes.
 - **Account deletion**: `DELETE /api/auth/delete` with username confirmation. Deletes user, config, images (R2 + D1), clears session cookie.
-- **Images**: Client optimizes (WebP, 1200px max) then uploads to `/api/images` → R2. Served at `/img/:key` with immutable cache.
+- **Images**: Client optimizes (WebP, 1200px max) then uploads to `/api/images` → R2 (validated: type whitelist, 5MB max, repo name regex). Served at `/img/:key` with immutable cache + `nosniff`.
 - **Config**: JSON stored in D1 `config` column. GET is public, PUT requires auth.
 
 ## Key Patterns
@@ -63,7 +63,9 @@ Vanilla JS portfolio platform deployed on Cloudflare Workers + D1 + R2. Users lo
 - **Card arrow icon**: `getCardIcon(repo)` returns `smartphone` for App Store links, `globe` for other external links, `github` otherwise
 - **Rendering**: `renderHeader(user)` builds title+bio+social links+footer, `renderCard(repo, i)` builds each card, `renderGrid(repos)` handles filtering/sorting, `renderWithDevConfig(repos)` re-inits edit features after DOM changes
 - **Lucide icons**: `refreshIcons()` calls `createIcons()` then removes `data-lucide` attrs to prevent warnings on subsequent calls.
-- **HTML escaping** via `escapeHTML()` on all user-provided content
+- **HTML escaping** via `escapeHTML()` on all user-provided content (including attribute values: `href`, `src`)
+- **URL sanitization** via `sanitizeURL()` — rejects non-http(s) protocols (blocks `javascript:` URIs). Applied to all `href` values from user config.
+- **Social links** use `rel="noopener noreferrer"` on `target="_blank"` links
 - **Boolean config defaults**: `showBio` and `showFooter` default to `true` (check `!== false`, not truthy)
 - **CSS variables** from Tailwind neutral palette: `--bg`, `--surface`, `--text`, `--text-2`, `--text-3`, `--icon-border`, `--toggle-on`, `--radius`, `--gap`
 - **Light theme only**

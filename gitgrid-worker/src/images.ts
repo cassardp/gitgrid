@@ -1,5 +1,9 @@
 import { getSessionUser } from './auth';
 
+const ALLOWED_IMAGE_TYPES: Record<string, string> = { 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif' };
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const REPO_NAME_RE = /^[a-zA-Z0-9._-]+$/;
+
 export async function handleUploadImage(request: Request, env: Env): Promise<Response> {
 	const user = await getSessionUser(request, env);
 	if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -9,7 +13,11 @@ export async function handleUploadImage(request: Request, env: Env): Promise<Res
 	const repoName = formData.get('repo') as string | null;
 	if (!file) return Response.json({ error: 'No file provided' }, { status: 400 });
 
-	const ext = file.name.split('.').pop() || 'webp';
+	const ext = ALLOWED_IMAGE_TYPES[file.type];
+	if (!ext) return Response.json({ error: 'Invalid file type' }, { status: 400 });
+	if (file.size > MAX_FILE_SIZE) return Response.json({ error: 'File too large' }, { status: 400 });
+	if (repoName && !REPO_NAME_RE.test(repoName)) return Response.json({ error: 'Invalid repo name' }, { status: 400 });
+
 	const r2Key = `${user.username}/${repoName || '_default'}/${Date.now()}.${ext}`;
 
 	await env.IMAGES.put(r2Key, file.stream(), {
@@ -61,6 +69,7 @@ export async function handleServeImage(key: string, env: Env): Promise<Response>
 		headers: {
 			'Content-Type': object.httpMetadata?.contentType || 'image/webp',
 			'Cache-Control': 'public, max-age=31536000, immutable',
+			'X-Content-Type-Options': 'nosniff',
 		},
 	});
 }

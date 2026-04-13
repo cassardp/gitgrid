@@ -63,25 +63,34 @@ function escapeHTML(str) {
   return d.innerHTML;
 }
 
+function sanitizeURL(url) {
+  if (!url) return "";
+  try {
+    var u = new URL(url, "https://placeholder.com");
+    if (u.protocol === "https:" || u.protocol === "http:") return url;
+  } catch (e) {}
+  return "";
+}
+
 
 function buildSocialLinks(user) {
-  const githubUrl = CONFIG.github || user.html_url;
+  const githubUrl = sanitizeURL(CONFIG.github || user.html_url);
   const twitterHandle = CONFIG.twitter || user.twitter_username;
   const blogUrl = CONFIG.blog || user.blog;
   const links = [];
   if (githubUrl)
-    links.push(`<a class="icon-btn icon-btn-social" href="${githubUrl}" target="_blank" title="GitHub"><i data-lucide="github"></i></a>`);
+    links.push(`<a class="icon-btn icon-btn-social" href="${escapeHTML(githubUrl)}" target="_blank" rel="noopener noreferrer" title="GitHub"><i data-lucide="github"></i></a>`);
   if (twitterHandle) {
-    const tUrl = twitterHandle.startsWith("http") ? twitterHandle : `https://x.com/${twitterHandle}`;
-    links.push(`<a class="icon-btn icon-btn-social" href="${tUrl}" target="_blank" title="X / Twitter"><i data-lucide="twitter"></i></a>`);
+    const tUrl = twitterHandle.startsWith("http") ? sanitizeURL(twitterHandle) : `https://x.com/${encodeURIComponent(twitterHandle)}`;
+    if (tUrl) links.push(`<a class="icon-btn icon-btn-social" href="${escapeHTML(tUrl)}" target="_blank" rel="noopener noreferrer" title="X / Twitter"><i data-lucide="twitter"></i></a>`);
   }
   if (blogUrl) {
-    const url = blogUrl.startsWith("http") ? blogUrl : `https://${blogUrl}`;
-    links.push(`<a class="icon-btn icon-btn-social" href="${url}" target="_blank" title="Website"><i data-lucide="globe"></i></a>`);
+    const url = blogUrl.startsWith("http") ? sanitizeURL(blogUrl) : `https://${blogUrl}`;
+    if (url) links.push(`<a class="icon-btn icon-btn-social" href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer" title="Website"><i data-lucide="globe"></i></a>`);
   }
   const email = CONFIG.email;
   if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    links.push(`<a class="icon-btn icon-btn-social" href="mailto:${email}" title="Email"><i data-lucide="mail"></i></a>`);
+    links.push(`<a class="icon-btn icon-btn-social" href="mailto:${escapeHTML(email)}" title="Email"><i data-lucide="mail"></i></a>`);
   return links.join("");
 }
 
@@ -123,7 +132,7 @@ function renderHeader(user) {
   const socialRow = socialHTML ? `<div class="social-links">${socialHTML}</div>` : "";
 
   const avatar = user.avatar_url
-    ? `<img class="avatar" src="${user.avatar_url}&s=192" alt="${escapeHTML(user.login)}" width="96" height="96">` : "";
+    ? `<img class="avatar" src="${escapeHTML(user.avatar_url + '&s=192')}" alt="${escapeHTML(user.login)}" width="96" height="96">` : "";
 
   const pageTitle = document.getElementById("page-title");
   pageTitle.innerHTML = `
@@ -152,22 +161,22 @@ function renderHeader(user) {
 }
 
 function renderCard(repo, index) {
-  const link = getRepoLink(repo);
+  const link = sanitizeURL(getRepoLink(repo)) || "#";
   const delay = Math.min(index * 0.06, 0.8);
   const rc = getRepoConfig(repo.name);
 
   const lang = repo.language
-    ? `<span class="card-meta-item">${repo.language}</span>` : "";
+    ? `<span class="card-meta-item">${escapeHTML(repo.language)}</span>` : "";
 
   const stars = repo.stargazers_count > 0
     ? `<span class="card-price"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
-  const bgImg = rc.screenshot
+  const bgImg = rc.screenshot && /^[\w.\/-]+$/.test(rc.screenshot)
     ? `background-image:url('/img/${rc.screenshot}');background-size:cover;background-position:center;` : "";
 
   return `
     <a class="card"
-       href="${link}" target="_blank" rel="noopener"
+       href="${escapeHTML(link)}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s;${bgImg}">
       <div class="card-arrow"><i data-lucide="${getCardIcon(repo)}"></i></div>
