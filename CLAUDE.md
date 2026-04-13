@@ -31,7 +31,7 @@ Vanilla JS portfolio platform deployed on Cloudflare Workers + D1 + R2. Users lo
 
 ### Worker (`gitgrid-worker/`)
 
-- **src/index.ts** — Router: `/api/*` → handlers, `/img/*` → R2 serve, else → `env.ASSETS.fetch()` (SPA fallback)
+- **src/index.ts** — Router: `/api/*` → handlers, `/img/*` → R2 serve, `/:username` → inject OG meta tags from D1, else → `env.ASSETS.fetch()` (SPA fallback)
 - **src/auth.ts** — GitHub App install+auth flow (login → callback → session cookie HMAC-SHA256 signed), session verification, account deletion
 - **src/config.ts** — GET/PUT user config
 - **src/sync.ts** — POST: fetch GitHub profile + repos (public + private) with user's token → store in D1 `repos_data`
@@ -44,20 +44,21 @@ Vanilla JS portfolio platform deployed on Cloudflare Workers + D1 + R2. Users lo
 
 - **Auth**: GitHub App installation flow (`/apps/gitgrid-app/installations/new`) → OAuth callback → user access token → D1. Session = HMAC-signed user ID in HttpOnly cookie. Timing-safe HMAC verification via `crypto.subtle.verify`.
 - **Sync**: User's token → GitHub API (profile + all repos, public + private) → D1 `repos_data`. Each user uses their own rate limit (5000 req/h).
-- **Public pages**: Served from D1 `repos_data` cache, zero GitHub API calls. Private repos without homepage are filtered out for visitors.
+- **Public pages**: Served from D1 `repos_data` cache, zero GitHub API calls. Private repos without homepage are filtered out for visitors. OG meta tags (title, bio, avatar) injected server-side for `/:username` routes.
 - **Account deletion**: `DELETE /api/auth/delete` with username confirmation. Deletes user, config, images (R2 + D1), clears session cookie.
-- **Images**: Client uploads to `/api/images` → R2. Served at `/img/:key` with immutable cache.
+- **Images**: Client optimizes (WebP, 1200px max) then uploads to `/api/images` → R2. Served at `/img/:key` with immutable cache.
 - **Config**: JSON stored in D1 `config` column. GET is public, PUT requires auth.
 
 ## Key Patterns
 
 - **Edit-mode features** gated on `isOwner` (authenticated + same username). Edit palette, drag-drop, visibility toggle, image upload, settings modal.
 - **First login auto-sync**: If owner visits their page with no data, SPA auto-triggers `POST /api/sync` and renders after completion.
-- **Dev palette**: fixed floating pill at bottom center (`#dev-palette`), dark bg with light icons. Contains sync, preview, settings buttons. Event listeners attached once at creation time.
+- **Dev palette**: fixed floating pill at bottom center (`#dev-palette`), dark bg with light icons. Contains sync, mobile preview, settings buttons. Event listeners attached once at creation time.
+- **Mobile preview**: smartphone icon in palette (desktop only), toggles `body.mobile-preview` class to simulate 420px single-column layout.
 - **Social links**: displayed under the bio in `#page-title`. GitHub, Twitter, blog, email (mailto: with regex validation). Built by `buildSocialLinks(user)`.
 - **Settings modal**: organized in sections (Header, Links, Footer, Danger zone). Title and bio inputs use GitHub values as placeholders. Changes apply live via `renderWithDevConfig`; saved to API on modal close. Danger zone: delete account with username confirmation.
-- **Preview mode**: toggle between edit (globe icon) and production (code icon). Icons show destination, not current state.
-- **Hidden repos**: shown in edit mode with grayscale filter + overlay. Visibility toggled via click on card arrow (eye/eye-off).
+- **Hidden repos**: separate "Hidden" section below the grid with compact pills (name + language + eye icon). Click pill to restore to grid. Eye-off on a visible card moves it to hidden section. Private repos hidden by default, public visible. `isExcluded(repo)` checks `config.hidden` then falls back to `repo.private`.
+- **Image optimization**: client-side before upload via canvas → WebP (1200px max, 82% quality). Transparent to user.
 - **Drag & drop reorder**: pointer events (not HTML5 drag API). FLIP animation for smooth card shifting. `requestAnimationFrame` throttle. File drops (images) use HTML5 drag events.
 - **Card arrow icon**: `getCardIcon(repo)` returns `smartphone` for App Store links, `globe` for other external links, `github` otherwise
 - **Rendering**: `renderHeader(user)` builds title+bio+social links+footer, `renderCard(repo, i)` builds each card, `renderGrid(repos)` handles filtering/sorting, `renderWithDevConfig(repos)` re-inits edit features after DOM changes
