@@ -1,78 +1,54 @@
 # GitGrid
 
-> Work in progress — lots of features still to come.
+Turn your GitHub repos into a clean portfolio. Log in with GitHub, and your repos appear as a card grid at `gitgrid.app/username`.
 
-A minimal portfolio generator that turns your GitHub repos into a clean card grid. No framework, no database — just a static site you configure locally and deploy anywhere.
+**[gitgrid.app](https://gitgrid.app)**
 
-**[Live demo](https://gitgrid.vercel.app/)**
+![GitGrid preview](preview.png)
 
-## How it works
+## Features
 
-1. **Sync** — Pulls your public repos and profile from the GitHub API
-2. **Configure** — A local dev mode lets you reorder cards (drag & drop), upload screenshots, hide repos, edit title/bio/theme/social links via a settings modal
-3. **Deploy** — Builds a static `dist/` folder, deployable on Vercel, Netlify, or any static host
-
-All configuration lives in `config.js`. No account needed, no backend, no API keys for public repos.
-
-## Quick start
-
-```bash
-npm install
-npm run dev        # Dev server with admin tools (localhost:5173)
-```
-
-In dev mode you get:
-- Drag & drop to reorder cards
-- Click the eye icon on any card to show/hide it
-- Upload screenshots per repo
-- Settings modal (gear icon) for title, bio, alignment, theme, social links
-
-When you're happy with the result:
-
-```bash
-npm run build      # Syncs from GitHub + builds to dist/
-```
-
-Deploy `dist/` wherever you want. On Vercel, just connect the repo — build command is `npm run build`, output is `dist`.
-
-## Configuration
-
-Everything is in `config.js`:
-
-```js
-export default {
-  username: "your-github-username",
-  title: "",              // Custom title (default: GitHub name)
-  showBio: true,          // Show GitHub bio under title
-  theme: "light",         // "light" or "dark"
-  align: "left",          // Title/bio alignment: "left", "center", "right"
-  github: "",             // Override GitHub profile URL
-  twitter: "",            // Twitter/X handle
-  blog: "",               // Website URL
-  repos: {
-    "repo-name": {
-      hidden: true,       // Hide from portfolio
-      order: 0,           // Manual sort order
-      screenshot: "images/repo.png"
-    }
-  }
-};
-```
-
-Most of this can be edited visually in dev mode via the settings modal and card interactions.
+- **Auto-sync** — Pulls your repos and profile from GitHub (public + private)
+- **Drag & drop** — Reorder cards visually
+- **Screenshots** — Upload images per repo (client-side WebP optimization)
+- **Settings** — Title, bio, social links, footer, alignment — all editable in-app
+- **Hidden repos** — Hide any repo from your public portfolio
+- **Public pages** — Visitors see your portfolio with zero GitHub API calls (served from cache)
+- **OG meta tags** — Dynamic Open Graph tags for link previews
 
 ## Tech stack
 
-- Vanilla JS — no framework
-- Vite — dev server + build
-- Lucide — icons
-- Geist — font
-- GitHub public API — no auth required
+- **Frontend** — Vanilla JS, no framework, no bundler runtime
+- **Backend** — Cloudflare Workers + D1 (SQLite) + R2 (images)
+- **Auth** — GitHub App OAuth with HMAC-SHA256 sessions
+- **Icons** — Lucide
+- **Font** — Geist
 
-## What's next
+## Development
 
-This is an early version. Planned improvements include:
+```bash
+npm install
+npm run dev          # Vite dev server (localhost:5173)
+```
 
-- Private repo support (via GitHub token)
-- More card layout options
-- Improved mobile experience
+In a separate terminal:
+
+```bash
+cd gitgrid-worker
+npm install
+npm run dev          # Wrangler dev (localhost:8787)
+```
+
+The Vite dev server proxies `/api` and `/img` to the Worker.
+
+## Deploy
+
+```bash
+npm run deploy       # Build + wrangler deploy
+```
+
+Requires a Cloudflare account with D1 and R2 configured. Secrets (`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `HMAC_KEY`) are set via `wrangler secret put`.
+
+## License
+
+MIT
