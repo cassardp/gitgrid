@@ -1,4 +1,4 @@
-import { createIcons, X, Upload, Eye, EyeOff, Image, Trash2 } from "lucide";
+import { createIcons, X, Upload, Image, Trash2 } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -508,14 +508,14 @@ function addRemoveButton(card, repo) {
   const btn = document.createElement("button");
   btn.className = "dev-remove-img";
   btn.title = "Remove image";
-  btn.innerHTML = `<i data-lucide="x"></i>`;
+  btn.innerHTML = `<i data-lucide="trash-2"></i>`;
   btn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     applyImage(card, repo, null);
   });
   card.appendChild(btn);
-  renderIcons({ X });
+  renderIcons({ Trash2 });
 }
 
 function applyImage(card, repo, imagePath) {
@@ -689,7 +689,7 @@ function setupVisibilityToggle(card, repo) {
   }
 
   arrow.title = "Hide repo";
-  arrow.innerHTML = `<i data-lucide="eye-off"></i>`;
+  arrow.innerHTML = `<i data-lucide="x"></i>`;
 
   arrow.addEventListener("click", (e) => {
     e.preventDefault();
@@ -699,7 +699,7 @@ function setupVisibilityToggle(card, repo) {
     document.dispatchEvent(new CustomEvent("gitgrid:rerender"));
   });
 
-  renderIcons({ EyeOff });
+  renderIcons({ X });
 }
 
 export function initDevConfig(config, repos) {

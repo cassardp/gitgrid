@@ -186,7 +186,7 @@ body {
 
 
 .footer-text {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-3);
   margin: 0;
 }
@@ -195,7 +195,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.03em;
   color: var(--text-3);
@@ -382,14 +382,17 @@ body {
 }
 
 .hidden-item-icon {
-  width: 14px;
+  width: 0;
   height: 14px;
   color: var(--text-3);
   opacity: 0;
-  transition: opacity 0.15s;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: width 0.15s, opacity 0.15s;
 }
 
 .hidden-item:hover .hidden-item-icon {
+  width: 14px;
   opacity: 1;
 }
 

@@ -1,4 +1,4 @@
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus } from "lucide";
 
 let cachedData = null;
 let CONFIG = {};
@@ -7,7 +7,7 @@ let isOwner = false;
 let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
@@ -271,7 +271,7 @@ function renderHiddenSection(repos) {
       ${hidden.map(function (r) {
         return `
           <div class="hidden-item" data-repo="${escapeHTML(r.name)}">
-            <i data-lucide="eye" class="hidden-item-icon"></i>
+            <i data-lucide="plus" class="hidden-item-icon"></i>
             <span class="hidden-item-name">${escapeHTML(r.name)}</span>
           </div>`;
       }).join("")}
