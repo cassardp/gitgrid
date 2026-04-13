@@ -21,7 +21,7 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
-	"workers_dev": true,
+	"workers_dev": false,
 	"routes": [
 		{ "pattern": "gitgrid.app/*", "zone_name": "gitgrid.app" }
 	],

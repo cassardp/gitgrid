@@ -76,7 +76,7 @@ export default {
 				const assetRes = await env.ASSETS.fetch(request);
 				const html = (await assetRes.text()).replace('<title>Portfolio</title>', ogTags);
 				return new Response(html, {
-					headers: { 'Content-Type': 'text/html; charset=utf-8' },
+					headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Frame-Options': 'DENY' },
 				});
 			}
 		}
