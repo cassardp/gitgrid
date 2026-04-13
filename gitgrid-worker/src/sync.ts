@@ -48,6 +48,8 @@ export async function handleSync(request: Request, env: Env): Promise<Response> 
 			avatar_url: profile.avatar_url,
 			bio: profile.bio,
 			html_url: profile.html_url,
+			twitter_username: profile.twitter_username || null,
+			blog: profile.blog || null,
 		},
 		repos: repos.map(r => ({
 			name: r.name,

@@ -95,7 +95,14 @@ body {
 .page-title {
   display: flex;
   flex-direction: column;
-  padding: 56px 0 40px;
+  padding: 56px 0 48px;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  margin-bottom: 20px;
 }
 
 .page-title[style*="center"] {
@@ -140,8 +147,8 @@ body {
 }
 
 .social-links .icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .social-links .icon-btn:hover {
@@ -216,10 +223,11 @@ body {
   overflow: hidden;
   cursor: pointer;
   opacity: 0;
-  animation: fadeIn 0.35s ease forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   position: relative;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 
 /* Arrow button — top right */
 .card-arrow {
@@ -345,8 +353,8 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .error {
@@ -598,4 +606,5 @@ body {
   .grid { grid-template-columns: 1fr; gap: 12px; }
   .card-footer { padding: 0 20px 18px; }
   .card-arrow { top: 14px; right: 14px; width: 32px; height: 32px; }
+  .avatar { width: 80px; height: 80px; margin-bottom: 16px; }
 }

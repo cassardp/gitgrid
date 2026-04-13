@@ -61,6 +61,7 @@ function escapeHTML(str) {
   return d.innerHTML;
 }
 
+
 function buildSocialLinks(user) {
   const githubUrl = CONFIG.github || user.html_url;
   const twitterHandle = CONFIG.twitter || user.twitter_username;
@@ -113,8 +114,12 @@ function renderHeader(user) {
   const socialHTML = buildSocialLinks(user);
   const socialRow = socialHTML ? `<div class="social-links">${socialHTML}</div>` : "";
 
+  const avatar = user.avatar_url
+    ? `<img class="avatar" src="${user.avatar_url}&s=192" alt="${escapeHTML(user.login)}" width="96" height="96">` : "";
+
   const pageTitle = document.getElementById("page-title");
   pageTitle.innerHTML = `
+    ${avatar}
     <h1 class="title">
       <span class="title-name">${escapeHTML(name)}</span>
     </h1>
@@ -140,7 +145,7 @@ function renderHeader(user) {
 
 function renderCard(repo, index) {
   const link = getRepoLink(repo);
-  const delay = Math.min(index * 0.03, 0.5);
+  const delay = Math.min(index * 0.06, 0.8);
   const rc = getRepoConfig(repo.name);
   const hidden = isExcluded(repo.name);
 
