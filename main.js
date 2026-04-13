@@ -96,12 +96,20 @@ function renderHeader(user) {
         <i data-lucide="refresh-cw"></i>
       </button>
       <span class="palette-sep"></span>
+      <button class="icon-btn" id="mobile-btn" title="Mobile preview">
+        <i data-lucide="smartphone"></i>
+      </button>
+      <span class="palette-sep"></span>
       <button class="icon-btn" id="settings-btn" title="Settings">
         <i data-lucide="settings"></i>
       </button>
     `;
     document.body.appendChild(palette);
     palette.querySelector("#sync-btn").addEventListener("click", handleSync);
+    palette.querySelector("#mobile-btn").addEventListener("click", function () {
+      document.body.classList.toggle("mobile-preview");
+      this.classList.toggle("active");
+    });
     palette.querySelector("#settings-btn").addEventListener("click", openSettings);
     document.addEventListener("gitgrid:rerender", () => {
       if (cachedData) renderWithDevConfig(cachedData.repos);
