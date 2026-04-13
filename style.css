@@ -96,12 +96,11 @@ body {
 .mobile-preview .main {
   max-width: 420px;
   padding: 0 16px 80px;
-  transition: max-width 0.3s ease, padding 0.3s ease;
 }
 
 .mobile-preview .grid {
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 16px;
 }
 
 .mobile-preview .page-title { padding: 24px 16px 32px; }
@@ -180,8 +179,9 @@ body {
 .footer-actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
   padding-top: 48px;
+  padding-bottom: 90px;
 }
 
 
@@ -220,6 +220,7 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 32px 120px;
+  transition: max-width 0.3s ease, padding 0.3s ease;
 }
 
 /* Grid */
@@ -247,6 +248,12 @@ body {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+
+/* Image card — icon buttons on images */
+.card[style*="background-image"] .card-arrow {
+  background: var(--bg);
+  color: var(--text-2);
+}
 
 /* Arrow button — top right */
 .card-arrow {
@@ -324,6 +331,12 @@ body {
   opacity: 0.6;
 }
 
+/* Dark background image — light text */
+.card-dark-bg .card-title { color: var(--surface); }
+.card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 75%, transparent); }
+.card-dark-bg .card-price { color: color-mix(in srgb, var(--surface) 85%, transparent); }
+.card-dark-bg .card-price svg { opacity: 0.8; }
+
 /* Hidden repos section (edit mode) */
 .hidden-section {
   margin-top: 56px;
@@ -355,8 +368,8 @@ body {
 .hidden-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px 6px 14px;
+  gap: 6px;
+  padding: 6px 14px 6px 10px;
   border-radius: 20px;
   background: var(--surface);
   font-size: 13px;
@@ -368,37 +381,21 @@ body {
   box-shadow: 0 0 0 1px var(--text-3);
 }
 
+.hidden-item-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.hidden-item:hover .hidden-item-icon {
+  opacity: 1;
+}
+
 .hidden-item-name {
   color: var(--text-2);
   font-weight: 500;
-}
-
-.hidden-item-lang {
-  color: var(--text-3);
-  font-size: 12px;
-}
-
-.hidden-item-restore {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
-  background: none;
-  color: var(--text-3);
-  cursor: pointer;
-  transition: color 0.15s;
-}
-
-.hidden-item:hover .hidden-item-restore {
-  color: var(--text);
-}
-
-.hidden-item-restore svg {
-  width: 14px;
-  height: 14px;
 }
 
 /* Loading */
@@ -562,6 +559,7 @@ body {
   gap: 12px;
 }
 
+
 .setting-input {
   width: 100%;
   padding: 10px 12px;
@@ -658,6 +656,40 @@ body {
   transform: translateX(16px);
 }
 
+.setting-danger summary {
+  list-style: none;
+}
+
+.setting-danger summary::-webkit-details-marker {
+  display: none;
+}
+
+.setting-danger-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.setting-danger-summary .setting-section-title {
+  color: var(--danger);
+  margin-bottom: 0;
+}
+
+.setting-danger-chevron {
+  color: var(--text-3);
+  transition: transform 0.2s;
+  transform: rotate(180deg);
+}
+
+.setting-danger[open] .setting-danger-chevron {
+  transform: rotate(0deg);
+}
+
+.setting-danger-content {
+  margin-top: 14px;
+}
+
 .setting-delete-btn {
   width: 100%;
   padding: 10px;
@@ -703,7 +735,7 @@ body {
   .page-title { padding: 24px 16px 32px; }
   .title { font-size: 28px; }
   .main { padding: 0 16px 80px; }
-  .grid { grid-template-columns: 1fr; gap: 12px; }
+  .grid { grid-template-columns: 1fr; gap: 16px; }
   .card-footer { padding: 0 20px 18px; }
   .card-arrow { top: 14px; right: 14px; width: 32px; height: 32px; }
   .avatar { width: 80px; height: 80px; margin-bottom: 16px; }

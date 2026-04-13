@@ -1,12 +1,13 @@
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail } from "lucide";
 
 let cachedData = null;
 let CONFIG = {};
 let currentUser = null;
 let isOwner = false;
+let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
@@ -56,6 +57,34 @@ function getCardIcon(repo) {
   if (hasExternalLink(repo)) return "globe";
   return "github";
 }
+
+function detectCardBrightness(card) {
+  var bg = card.style.backgroundImage;
+  if (!bg || bg === "none") {
+    card.classList.remove("card-dark-bg");
+    return;
+  }
+  var match = bg.match(/url\(['"]?([^'")+]+)['"]?\)/);
+  if (!match) return;
+  var img = new window.Image();
+  img.onload = function () {
+    var canvas = document.createElement("canvas");
+    var w = 50, h = 50;
+    canvas.width = w;
+    canvas.height = h;
+    var ctx = canvas.getContext("2d");
+    var srcY = Math.floor(img.height * 0.65);
+    ctx.drawImage(img, 0, srcY, img.width, img.height - srcY, 0, 0, w, h);
+    var data = ctx.getImageData(0, 0, w, h).data;
+    var total = 0;
+    for (var i = 0; i < data.length; i += 4) {
+      total += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    }
+    card.classList.toggle("card-dark-bg", total / (data.length / 4) < 128);
+  };
+  img.src = match[1];
+}
+window.detectCardBrightness = detectCardBrightness;
 
 function escapeHTML(str) {
   const d = document.createElement("div");
@@ -109,15 +138,34 @@ function renderHeader(user) {
         <i data-lucide="smartphone"></i>
       </button>
       <span class="palette-sep"></span>
+      <button class="icon-btn" id="preview-btn" title="Preview as visitor">
+        <i data-lucide="eye"></i>
+      </button>
+      <span class="palette-sep"></span>
       <button class="icon-btn" id="settings-btn" title="Settings">
-        <i data-lucide="settings"></i>
+        <i data-lucide="settings-2"></i>
       </button>
     `;
     document.body.appendChild(palette);
     palette.querySelector("#sync-btn").addEventListener("click", handleSync);
     palette.querySelector("#mobile-btn").addEventListener("click", function () {
-      document.body.classList.toggle("mobile-preview");
+      var isMobile = document.body.classList.toggle("mobile-preview");
       this.classList.toggle("active");
+      this.querySelector("svg").remove();
+      var i = document.createElement("i");
+      i.setAttribute("data-lucide", isMobile ? "monitor" : "smartphone");
+      this.appendChild(i);
+      refreshIcons();
+    });
+    palette.querySelector("#preview-btn").addEventListener("click", function () {
+      previewMode = !previewMode;
+      this.classList.toggle("active");
+      this.querySelector("svg").remove();
+      var i = document.createElement("i");
+      i.setAttribute("data-lucide", previewMode ? "code" : "eye");
+      this.appendChild(i);
+      refreshIcons();
+      if (cachedData) renderWithDevConfig(cachedData.repos);
     });
     palette.querySelector("#settings-btn").addEventListener("click", openSettings);
     document.addEventListener("gitgrid:rerender", () => {
@@ -165,10 +213,10 @@ function renderCard(repo, index) {
   const delay = Math.min(index * 0.06, 0.8);
   const rc = getRepoConfig(repo.name);
 
-  const lang = repo.language
+  const lang = repo.language && CONFIG.showLanguage
     ? `<span class="card-meta-item">${escapeHTML(repo.language)}</span>` : "";
 
-  const stars = repo.stargazers_count > 0
+  const stars = repo.stargazers_count > 0 && CONFIG.showStars
     ? `<span class="card-price"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
   const bgImg = rc.screenshot && /^[\w.\/-]+$/.test(rc.screenshot)
@@ -179,7 +227,7 @@ function renderCard(repo, index) {
        href="${escapeHTML(link)}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s;${bgImg}">
-      <div class="card-arrow"><i data-lucide="${getCardIcon(repo)}"></i></div>
+      ${CONFIG.showIcon ? `<div class="card-arrow"><i data-lucide="${getCardIcon(repo)}"></i></div>` : ""}
       <div class="card-footer">
         ${lang}
         <div class="card-title-row">
@@ -202,6 +250,7 @@ function renderGrid(repos) {
 
   content.innerHTML = `<div class="grid">${filtered.map(renderCard).join("")}</div>`;
   refreshIcons();
+  content.querySelectorAll(".card[style*='background-image']").forEach(detectCardBrightness);
   return filtered;
 }
 
@@ -220,16 +269,16 @@ function renderHiddenSection(repos) {
     <span class="hidden-section-title">Hidden</span>
     <div class="hidden-list">
       ${hidden.map(function (r) {
-        var lang = r.language ? `<span class="hidden-item-lang">${escapeHTML(r.language)}</span>` : "";
         return `
           <div class="hidden-item" data-repo="${escapeHTML(r.name)}">
+            <i data-lucide="eye" class="hidden-item-icon"></i>
             <span class="hidden-item-name">${escapeHTML(r.name)}</span>
-            ${lang}
-            <button class="hidden-item-restore" title="Show repo"><i data-lucide="eye"></i></button>
           </div>`;
       }).join("")}
     </div>
   `;
+  var list = section.querySelector(".hidden-list");
+  list.style.justifyContent = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
   document.getElementById("content").appendChild(section);
 
   section.querySelectorAll(".hidden-item").forEach(function (item) {
@@ -272,7 +321,7 @@ async function handleSync() {
 
 async function renderWithDevConfig(repos) {
   const filtered = renderGrid(repos);
-  if (isOwner) {
+  if (isOwner && !previewMode) {
     renderHiddenSection(repos);
     if (filtered) {
       const { initDevConfig } = await import("./dev-config.js");
@@ -355,6 +404,22 @@ function openSettings() {
       </div>
 
       <div class="setting-section">
+        <span class="setting-section-title">Cards</span>
+        <div class="setting-row">
+          <span class="setting-row-label">Show language</span>
+          <button class="setting-toggle ${CONFIG.showLanguage ? "on" : ""}" id="s-show-language"></button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-row-label">Show stars</span>
+          <button class="setting-toggle ${CONFIG.showStars ? "on" : ""}" id="s-show-stars"></button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-row-label">Show icon</span>
+          <button class="setting-toggle ${CONFIG.showIcon ? "on" : ""}" id="s-show-icon"></button>
+        </div>
+      </div>
+
+      <div class="setting-section">
         <span class="setting-section-title">Footer</span>
         <div class="setting-group">
           <input class="setting-input" id="s-footer" type="text"
@@ -377,15 +442,20 @@ function openSettings() {
         </div>
       </div>
 
-      <div class="setting-section setting-danger">
-        <span class="setting-section-title" style="color:var(--danger)">Danger zone</span>
-        <p style="font-size:13px;color:var(--text-2);margin:0 0 12px">This will permanently delete your account, config, and all uploaded images.</p>
-        <div class="setting-group">
-          <input class="setting-input" id="s-delete-confirm" type="text"
-            placeholder="Type ${escapeHTML(currentUser.username)} to confirm">
+      <details class="setting-section setting-danger">
+        <summary class="setting-danger-summary">
+          <span class="setting-section-title">Delete account</span>
+          <svg class="setting-danger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <div class="setting-danger-content">
+          <p style="font-size:13px;color:var(--text-2);margin:0 0 12px">This will permanently delete your account, config, and all uploaded images.</p>
+          <div class="setting-group">
+            <input class="setting-input" id="s-delete-confirm" type="text"
+              placeholder="Type ${escapeHTML(currentUser.username)} to confirm">
+          </div>
+          <button class="setting-delete-btn" id="s-delete-btn" disabled>Delete account</button>
         </div>
-        <button class="setting-delete-btn" id="s-delete-btn" disabled>Delete account</button>
-      </div>
+      </details>
 
       <a class="setting-privacy-link" href="/privacy" target="_blank">Privacy Policy</a>
     </div>
@@ -415,6 +485,9 @@ function openSettings() {
   const apply = () => {
     CONFIG.title = document.getElementById("s-title").value.trim();
     CONFIG.showBio = document.getElementById("s-show-bio").classList.contains("on");
+    CONFIG.showLanguage = document.getElementById("s-show-language").classList.contains("on");
+    CONFIG.showStars = document.getElementById("s-show-stars").classList.contains("on");
+    CONFIG.showIcon = document.getElementById("s-show-icon").classList.contains("on");
     CONFIG.showFooter = document.getElementById("s-show-footer").classList.contains("on");
 
     const headerAlignBtn = overlay.querySelector('.setting-align[data-target="header"] .setting-align-btn.on');

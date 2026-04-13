@@ -76,6 +76,13 @@ function injectStyles() {
       z-index: 2;
     }
     .card:hover .dev-remove-img { opacity: 1; }
+    .card .card-arrow { opacity: 0; transition: opacity 0.2s, background 0.2s, color 0.2s; }
+    .card:hover .card-arrow { opacity: 1; }
+    .card[style*="background-image"] .dev-remove-img {
+      background: var(--bg);
+      color: var(--text-2);
+    }
+    .card[style*="background-image"] .dev-remove-img:hover { background: color-mix(in srgb, var(--danger) 80%, transparent); border-color: transparent; color: var(--surface); }
     .dev-remove-img:hover { background: rgba(220,38,38,0.8); color: #fff; }
     .dev-remove-img svg { width: 14px; height: 14px; }
     .dev-no-image {
@@ -521,9 +528,11 @@ function applyImage(card, repo, imagePath) {
     const placeholder = card.querySelector(".dev-no-image");
     if (placeholder) placeholder.remove();
     addRemoveButton(card, repo);
+    if (window.detectCardBrightness) window.detectCardBrightness(card);
   } else {
     delete rc.screenshot;
     card.style.backgroundImage = "";
+    card.classList.remove("card-dark-bg");
     const removeBtn = card.querySelector(".dev-remove-img");
     if (removeBtn) removeBtn.remove();
     if (!card.querySelector(".dev-no-image")) {
@@ -672,8 +681,12 @@ function setupImageButton(card, repo) {
 
 function setupVisibilityToggle(card, repo) {
   const rc = getRC(repo.name);
-  const arrow = card.querySelector(".card-arrow");
-  if (!arrow) return;
+  let arrow = card.querySelector(".card-arrow");
+  if (!arrow) {
+    arrow = document.createElement("div");
+    arrow.className = "card-arrow";
+    card.prepend(arrow);
+  }
 
   arrow.title = "Hide repo";
   arrow.innerHTML = `<i data-lucide="eye-off"></i>`;

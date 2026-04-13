@@ -6,7 +6,7 @@ export async function handleGetConfig(username: string, env: Env): Promise<Respo
 	return Response.json({ username: user.username, config: JSON.parse(user.config as string || '{}') });
 }
 
-const ALLOWED_FIELDS = new Set(['title', 'bio', 'showBio', 'align', 'footer', 'showFooter', 'footerAlign', 'github', 'twitter', 'blog', 'email', 'repos', 'sort']);
+const ALLOWED_FIELDS = new Set(['title', 'bio', 'showBio', 'align', 'footer', 'showFooter', 'footerAlign', 'showLanguage', 'showStars', 'showIcon', 'github', 'twitter', 'blog', 'email', 'repos', 'sort']);
 const ENUM_FIELDS: Record<string, Set<string>> = {
 	align: new Set(['left', 'center', 'right']),
 	footerAlign: new Set(['left', 'center', 'right']),
@@ -34,7 +34,7 @@ export async function handlePutConfig(request: Request, env: Env): Promise<Respo
 		const val = body[key];
 		if (key in ENUM_FIELDS) {
 			if (ENUM_FIELDS[key].has(val)) clean[key] = val;
-		} else if (key === 'showBio' || key === 'showFooter') {
+		} else if (key === 'showBio' || key === 'showFooter' || key === 'showLanguage' || key === 'showStars' || key === 'showIcon') {
 			if (typeof val === 'boolean') clean[key] = val;
 		} else if (key === 'repos') {
 			if (typeof val === 'object' && val !== null && !Array.isArray(val)) clean[key] = val;
