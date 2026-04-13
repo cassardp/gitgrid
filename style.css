@@ -681,6 +681,16 @@ body {
   cursor: not-allowed;
 }
 
+.setting-privacy-link {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-3);
+  text-decoration: none;
+  padding: 16px 0 4px;
+}
+.setting-privacy-link:hover { color: var(--text-2); }
+
 /* Responsive */
 @media (max-width: 1100px) {
   .grid { grid-template-columns: repeat(2, 1fr); }

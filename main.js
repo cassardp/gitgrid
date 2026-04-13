@@ -386,6 +386,8 @@ function openSettings() {
         </div>
         <button class="setting-delete-btn" id="s-delete-btn" disabled>Delete account</button>
       </div>
+
+      <a class="setting-privacy-link" href="/privacy" target="_blank">Privacy Policy</a>
     </div>
   `;
 
