@@ -8,6 +8,34 @@ function renderIcons(icons) {
 let workingConfig = null;
 let saveTimer = null;
 let stylesInjected = false;
+
+var MAX_SIZE = 1200;
+var QUALITY = 0.82;
+
+function optimizeImage(file) {
+  return new Promise(function (resolve) {
+    if (!file.type.startsWith("image/")) return resolve(file);
+    var img = new window.Image();
+    img.onload = function () {
+      var w = img.width, h = img.height;
+      if (w > MAX_SIZE || h > MAX_SIZE) {
+        var ratio = Math.min(MAX_SIZE / w, MAX_SIZE / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      var canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      canvas.toBlob(function (blob) {
+        if (!blob) return resolve(file);
+        resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }));
+      }, "image/webp", QUALITY);
+    };
+    img.onerror = function () { resolve(file); };
+    img.src = URL.createObjectURL(file);
+  });
+}
 let filteredRepos = null;
 let dragState = null;
 let dragListenersAttached = false;
@@ -89,10 +117,10 @@ function injectStyles() {
       background: var(--surface);
       border-radius: 16px;
       width: 100%;
-      max-width: 560px;
+      max-width: 480px;
       max-height: 80vh;
       overflow-y: auto;
-      padding: 32px;
+      padding: 24px;
       transform: translateY(8px);
       transition: transform 0.2s;
     }
@@ -101,11 +129,11 @@ function injectStyles() {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .picker-title {
-      font-size: 18px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 600;
       color: var(--text);
     }
     .picker-close {
@@ -127,6 +155,7 @@ function injectStyles() {
       grid-template-columns: repeat(3, 1fr);
       gap: 12px;
       margin-bottom: 20px;
+      min-height: 120px;
     }
     .picker-item {
       position: relative;
@@ -170,29 +199,38 @@ function injectStyles() {
     }
     .picker-btn {
       flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--icon-border);
-      background: none;
-      color: var(--text-2);
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: none;
+      background: var(--text);
+      color: var(--surface);
       font-size: 13px;
+      font-weight: 500;
       font-family: inherit;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: border-color 0.2s, color 0.2s;
+      transition: opacity 0.2s;
     }
-    .picker-btn:hover { border-color: var(--text-2); color: var(--text); }
+    .picker-btn:hover { opacity: 0.8; }
     .picker-btn svg { width: 14px; height: 14px; }
-    .picker-btn-danger { color: var(--text-3); }
-    .picker-btn-danger:hover { border-color: rgba(220,38,38,0.5); color: rgba(220,38,38,0.9); }
     .picker-empty {
-      text-align: center;
-      padding: 40px 20px;
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 32px 20px;
       color: var(--text-3);
       font-size: 13px;
+    }
+    .picker-empty svg {
+      width: 32px;
+      height: 32px;
+      stroke-width: 1.5;
     }
   `;
   document.head.appendChild(style);
@@ -219,6 +257,7 @@ function debouncedSave() {
 }
 
 async function handleImageDrop(name, file) {
+  file = await optimizeImage(file);
   const formData = new FormData();
   formData.append("file", file);
   formData.append("repo", name);
@@ -419,6 +458,8 @@ function setupDocumentDragListeners() {
       card.style.transition = "";
       card.style.pointerEvents = "";
       card.style.margin = "";
+      card.style.animation = "none";
+      card.style.opacity = "1";
       card.classList.remove("dev-dragging");
 
       document.body.style.userSelect = "";
@@ -524,7 +565,7 @@ async function openImagePicker(card, repo) {
           <img src="/img/${img}" alt="${img}">
           <button class="picker-item-delete" data-path="${img}" title="Delete image"><i data-lucide="trash-2"></i></button>
         </div>`).join("")
-    : `<div class="picker-empty">No images yet. Upload one below.</div>`;
+    : `<div class="picker-empty"><i data-lucide="image"></i>No images yet</div>`;
 
   overlay.innerHTML = `
     <div class="picker">
@@ -590,7 +631,7 @@ async function openImagePicker(card, repo) {
       debouncedSave();
       btn.closest(".picker-item").remove();
       if (!overlay.querySelector(".picker-item")) {
-        overlay.querySelector(".picker-grid").innerHTML = `<div class="picker-empty">No images yet. Upload one below.</div>`;
+        overlay.querySelector(".picker-grid").innerHTML = `<div class="picker-empty"><i data-lucide="image"></i>No images yet</div>`;
       }
     });
   });
@@ -601,8 +642,9 @@ async function openImagePicker(card, repo) {
     input.type = "file";
     input.accept = "image/*";
     input.addEventListener("change", async () => {
-      const file = input.files[0];
+      var file = input.files[0];
       if (!file) return;
+      file = await optimizeImage(file);
       const formData = new FormData();
       formData.append("file", file);
       formData.append("repo", repo.name);
@@ -633,32 +675,18 @@ function setupVisibilityToggle(card, repo) {
   const arrow = card.querySelector(".card-arrow");
   if (!arrow) return;
 
-  const hidden = rc.hidden === true;
-  arrow.title = hidden ? "Show repo" : "Hide repo";
-  arrow.innerHTML = hidden
-    ? `<i data-lucide="eye-off"></i>`
-    : `<i data-lucide="eye"></i>`;
+  arrow.title = "Hide repo";
+  arrow.innerHTML = `<i data-lucide="eye-off"></i>`;
 
   arrow.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const isHidden = rc.hidden === true;
-    if (isHidden) {
-      delete rc.hidden;
-    } else {
-      rc.hidden = true;
-    }
-    const nowHidden = rc.hidden === true;
-    card.classList.toggle("card-hidden", nowHidden);
-    arrow.title = nowHidden ? "Show repo" : "Hide repo";
-    arrow.innerHTML = nowHidden
-      ? `<i data-lucide="eye-off"></i>`
-      : `<i data-lucide="eye"></i>`;
-    renderIcons({ Eye, EyeOff });
+    rc.hidden = true;
     debouncedSave();
+    document.dispatchEvent(new CustomEvent("gitgrid:rerender"));
   });
 
-  renderIcons({ Eye, EyeOff });
+  renderIcons({ EyeOff });
 }
 
 export function initDevConfig(config, repos) {
@@ -666,7 +694,7 @@ export function initDevConfig(config, repos) {
   filteredRepos = repos;
   injectStyles();
   setupDocumentDragListeners();
-  const cards = document.querySelectorAll(".card");
+  const cards = document.querySelectorAll(".grid .card");
   cards.forEach((card, i) => {
     if (repos[i]) {
       setupDrag(card, repos[i]);

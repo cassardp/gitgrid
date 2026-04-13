@@ -1,13 +1,12 @@
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } from "lucide";
 
 let cachedData = null;
-let previewMode = false;
 let CONFIG = {};
 let currentUser = null;
 let isOwner = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, Code, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Eye, EyeOff, Image, Mail } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
@@ -15,8 +14,11 @@ function getRepoConfig(name) {
   return (CONFIG.repos && CONFIG.repos[name]) || {};
 }
 
-function isExcluded(name) {
-  return getRepoConfig(name).hidden;
+function isExcluded(repo) {
+  var rc = getRepoConfig(repo.name);
+  if (rc.hidden === true) return true;
+  if (rc.hidden === false) return false;
+  return repo.private === true;
 }
 
 function sortRepos(repos) {
@@ -94,18 +96,16 @@ function renderHeader(user) {
         <i data-lucide="refresh-cw"></i>
       </button>
       <span class="palette-sep"></span>
-      <button class="icon-btn" id="preview-btn" title="Preview production">
-        <i data-lucide="globe"></i>
-      </button>
-      <span class="palette-sep"></span>
       <button class="icon-btn" id="settings-btn" title="Settings">
         <i data-lucide="settings"></i>
       </button>
     `;
     document.body.appendChild(palette);
     palette.querySelector("#sync-btn").addEventListener("click", handleSync);
-    palette.querySelector("#preview-btn").addEventListener("click", handlePreview);
     palette.querySelector("#settings-btn").addEventListener("click", openSettings);
+    document.addEventListener("gitgrid:rerender", () => {
+      if (cachedData) renderWithDevConfig(cachedData.repos);
+    });
   }
 
   const bioText = CONFIG.bio || user.bio;
@@ -147,7 +147,6 @@ function renderCard(repo, index) {
   const link = getRepoLink(repo);
   const delay = Math.min(index * 0.06, 0.8);
   const rc = getRepoConfig(repo.name);
-  const hidden = isExcluded(repo.name);
 
   const lang = repo.language
     ? `<span class="card-meta-item">${repo.language}</span>` : "";
@@ -158,10 +157,8 @@ function renderCard(repo, index) {
   const bgImg = rc.screenshot
     ? `background-image:url('/img/${rc.screenshot}');background-size:cover;background-position:center;` : "";
 
-  const hiddenClass = hidden ? " card-hidden" : "";
-
   return `
-    <a class="card${hiddenClass}"
+    <a class="card"
        href="${link}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s;${bgImg}">
@@ -178,10 +175,7 @@ function renderCard(repo, index) {
 
 function renderGrid(repos) {
   const content = document.getElementById("content");
-  let filtered = repos.filter(r => !r.fork);
-  if (!isOwner || previewMode) {
-    filtered = filtered.filter(r => !isExcluded(r.name));
-  }
+  let filtered = repos.filter(r => !r.fork && !isExcluded(r));
   filtered = sortRepos(filtered);
 
   if (!filtered.length) {
@@ -192,6 +186,47 @@ function renderGrid(repos) {
   content.innerHTML = `<div class="grid">${filtered.map(renderCard).join("")}</div>`;
   refreshIcons();
   return filtered;
+}
+
+function renderHiddenSection(repos) {
+  var existing = document.querySelector(".hidden-section");
+  if (existing) existing.remove();
+
+  var hidden = repos.filter(function (r) { return !r.fork && isExcluded(r); });
+  if (!hidden.length) return;
+
+  hidden.sort(function (a, b) { return a.name.localeCompare(b.name); });
+
+  var section = document.createElement("div");
+  section.className = "hidden-section";
+  section.innerHTML = `
+    <span class="hidden-section-title">Hidden</span>
+    <div class="hidden-list">
+      ${hidden.map(function (r) {
+        var lang = r.language ? `<span class="hidden-item-lang">${escapeHTML(r.language)}</span>` : "";
+        return `
+          <div class="hidden-item" data-repo="${escapeHTML(r.name)}">
+            <span class="hidden-item-name">${escapeHTML(r.name)}</span>
+            ${lang}
+            <button class="hidden-item-restore" title="Show repo"><i data-lucide="eye"></i></button>
+          </div>`;
+      }).join("")}
+    </div>
+  `;
+  document.getElementById("content").appendChild(section);
+
+  section.querySelectorAll(".hidden-item").forEach(function (item) {
+    item.addEventListener("click", async function () {
+      var name = item.dataset.repo;
+      if (!CONFIG.repos) CONFIG.repos = {};
+      if (!CONFIG.repos[name]) CONFIG.repos[name] = {};
+      CONFIG.repos[name].hidden = false;
+      await saveConfig();
+      await renderWithDevConfig(cachedData.repos);
+    });
+  });
+
+  refreshIcons();
 }
 
 async function handleSync() {
@@ -220,29 +255,13 @@ async function handleSync() {
 
 async function renderWithDevConfig(repos) {
   const filtered = renderGrid(repos);
-  if (isOwner && filtered && !previewMode) {
-    const { initDevConfig } = await import("./dev-config.js");
-    initDevConfig(CONFIG, filtered);
+  if (isOwner) {
+    renderHiddenSection(repos);
+    if (filtered) {
+      const { initDevConfig } = await import("./dev-config.js");
+      initDevConfig(CONFIG, filtered);
+    }
   }
-}
-
-async function handlePreview() {
-  previewMode = !previewMode;
-  const btn = document.getElementById("preview-btn");
-  if (btn) {
-    btn.title = previewMode ? "Back to dev" : "Preview production";
-    btn.innerHTML = previewMode
-      ? `<i data-lucide="x"></i>`
-      : `<i data-lucide="globe"></i>`;
-    refreshIcons();
-  }
-  const palette = document.getElementById("dev-palette");
-  if (palette) {
-    palette.querySelectorAll(".icon-btn:not(#preview-btn), .palette-sep").forEach(el => {
-      el.style.display = previewMode ? "none" : "";
-    });
-  }
-  if (cachedData) await renderWithDevConfig(cachedData.repos);
 }
 
 async function saveConfig() {
@@ -567,7 +586,7 @@ async function init() {
     await renderWithDevConfig(cachedData.repos);
   } catch (err) {
     document.getElementById("content").innerHTML =
-      `<div class="error">${escapeHTML(err.message)}</div>`;
+      `<div class="error">${escapeHTML(err.message)}<a href="/">← Back to GitGrid</a></div>`;
   }
 }
 

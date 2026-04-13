@@ -305,26 +305,81 @@ body {
   opacity: 0.6;
 }
 
-/* Hidden cards (dev mode) */
-.card-hidden {
-  filter: grayscale(1);
-  transition: filter 0.3s ease;
+/* Hidden repos section (edit mode) */
+.hidden-section {
+  margin-top: 56px;
+  border-top: 1px solid var(--icon-border);
+  position: relative;
+  padding-top: 40px;
 }
-.card-hidden::after {
-  content: '';
+
+.hidden-section-title {
   position: absolute;
-  inset: 0;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
   background: var(--bg);
-  opacity: 0.65;
-  border-radius: var(--radius);
-  pointer-events: none;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
-.card-hidden:hover {
-  transform: none;
-  box-shadow: none;
+
+.hidden-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
-.card-hidden .card-arrow {
-  z-index: 2;
+
+.hidden-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 14px;
+  border-radius: 20px;
+  background: var(--surface);
+  font-size: 13px;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+
+.hidden-item:hover {
+  box-shadow: 0 0 0 1px var(--text-3);
+}
+
+.hidden-item-name {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.hidden-item-lang {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.hidden-item-restore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.hidden-item:hover .hidden-item-restore {
+  color: var(--text);
+}
+
+.hidden-item-restore svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Loading */
@@ -358,10 +413,24 @@ body {
 }
 
 .error {
-  text-align: center;
-  padding: 140px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
   color: var(--text-2);
+  font-size: 15px;
+  gap: 16px;
+}
+
+.error a {
+  color: var(--text-3);
+  text-decoration: none;
   font-size: 13px;
+}
+
+.error a:hover {
+  color: var(--text);
 }
 
 /* Settings modal */
@@ -384,7 +453,7 @@ body {
 .modal {
   background: var(--surface);
   border-radius: 16px;
-  width: 100%;
+  width: calc(100% - 32px);
   max-width: 480px;
   max-height: 80vh;
   overflow-y: auto;
@@ -607,4 +676,5 @@ body {
   .card-footer { padding: 0 20px 18px; }
   .card-arrow { top: 14px; right: 14px; width: 32px; height: 32px; }
   .avatar { width: 80px; height: 80px; margin-bottom: 16px; }
+  .setting-row-pair { flex-direction: column; gap: 0; }
 }
