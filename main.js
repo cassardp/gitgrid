@@ -225,13 +225,23 @@ function renderHeader(user) {
       document.body.appendChild(statsOverlay);
       window.addEventListener("scroll", function () {
         var hiddenList = document.querySelector(".hidden-list");
+        var shouldHide;
         if (hiddenList) {
           var hr = hiddenList.getBoundingClientRect();
-          statsOverlay.classList.toggle("hidden", hr.bottom > window.innerHeight - 120);
+          shouldHide = hr.bottom > window.innerHeight - 120;
         } else {
           var footer = document.getElementById("footer-actions");
           if (!footer) return;
-          statsOverlay.classList.toggle("hidden", footer.getBoundingClientRect().bottom > window.innerHeight);
+          shouldHide = footer.getBoundingClientRect().bottom > window.innerHeight;
+        }
+        var wasHidden = statsOverlay.classList.contains("hidden");
+        if (shouldHide) {
+          statsOverlay.classList.add("hidden");
+        } else if (wasHidden) {
+          statsOverlay.classList.remove("hidden");
+          statsOverlay.style.animation = "none";
+          statsOverlay.offsetHeight;
+          statsOverlay.style.animation = "";
         }
       }, { passive: true });
     }
