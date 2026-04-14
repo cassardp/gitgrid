@@ -45,7 +45,29 @@ export default {
 				return handleServeImage(key, env);
 			}
 
-			// Inject OG meta tags for /:username routes
+			// robots.txt
+			if (path === '/robots.txt') {
+				return new Response(
+					'User-agent: *\nAllow: /\n\nSitemap: https://gitgrid.app/sitemap.xml',
+					{ headers: { 'Content-Type': 'text/plain' } }
+				);
+			}
+
+			// sitemap.xml — dynamic from D1
+			if (path === '/sitemap.xml') {
+				const { results } = await env.DB.prepare(
+					'SELECT username FROM users ORDER BY username'
+				).all();
+				const urls = results.map((r: any) =>
+					`  <url><loc>https://gitgrid.app/${esc(r.username)}</loc></url>`
+				).join('\n');
+				return new Response(
+					`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://gitgrid.app/</loc></url>\n${urls}\n</urlset>`,
+					{ headers: { 'Content-Type': 'application/xml' } }
+				);
+			}
+
+			// Inject OG meta tags + JSON-LD for /:username routes
 			const segments = path.split('/').filter(Boolean);
 			if (segments.length === 1) {
 				const username = segments[0];
@@ -57,6 +79,7 @@ export default {
 					const config = JSON.parse(row.config as string || '{}');
 					const reposData = JSON.parse(row.repos_data as string || '{}');
 					const user = reposData.user || {};
+					const repos = (reposData.repos || []).filter((r: any) => !r.private || r.homepage);
 					const name = esc(config.title || user.name || user.login || username);
 					const bio = esc(config.bio || user.bio || '');
 					const avatar = user.avatar_url ? esc(user.avatar_url + '&s=400') : '';
@@ -74,8 +97,40 @@ export default {
 						avatar && `<meta name="twitter:image" content="${avatar}">`,
 					].filter(Boolean).join('\n    ');
 
+					// JSON-LD structured data
+					const jsonLd: any = {
+						'@context': 'https://schema.org',
+						'@type': 'ProfilePage',
+						mainEntity: {
+							'@type': 'Person',
+							name: config.title || user.name || user.login || username,
+							url: `https://gitgrid.app/${username}`,
+							...(user.avatar_url && { image: user.avatar_url }),
+							...(config.bio || user.bio ? { description: config.bio || user.bio } : {}),
+							...(user.html_url && { sameAs: [user.html_url] }),
+						},
+					};
+
+					if (repos.length > 0) {
+						jsonLd.mainEntity.knowsAbout = repos
+							.filter((r: any) => r.language)
+							.map((r: any) => r.language)
+							.filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
+
+						jsonLd.hasPart = repos.slice(0, 12).map((r: any) => ({
+							'@type': 'SoftwareSourceCode',
+							name: r.name,
+							...(r.description && { description: r.description }),
+							...(r.homepage ? { url: r.homepage } : { url: r.html_url }),
+							...(r.language && { programmingLanguage: r.language }),
+							codeRepository: r.html_url,
+						}));
+					}
+
+					const ldScript = `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
+
 					const assetRes = await env.ASSETS.fetch(request);
-					const html = (await assetRes.text()).replace('<title>Portfolio</title>', ogTags);
+					const html = (await assetRes.text()).replace('<title>Portfolio</title>', ogTags + '\n    ' + ldScript);
 					return new Response(html, {
 						headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Frame-Options': 'DENY' },
 					});
