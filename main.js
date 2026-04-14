@@ -1,4 +1,4 @@
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft } from "lucide";
 
 let cachedData = null;
 let cachedViews = null;
@@ -8,7 +8,7 @@ let isOwner = false;
 let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
@@ -221,7 +221,19 @@ function renderHeader(user) {
     if (!statsOverlay) {
       statsOverlay = document.createElement("div");
       statsOverlay.id = "stats-overlay";
+      statsOverlay.classList.add("hidden");
       document.body.appendChild(statsOverlay);
+      window.addEventListener("scroll", function () {
+        var hiddenList = document.querySelector(".hidden-list");
+        if (hiddenList) {
+          var hr = hiddenList.getBoundingClientRect();
+          statsOverlay.classList.toggle("hidden", hr.bottom > window.innerHeight - 120);
+        } else {
+          var footer = document.getElementById("footer-actions");
+          if (!footer) return;
+          statsOverlay.classList.toggle("hidden", footer.getBoundingClientRect().bottom > window.innerHeight);
+        }
+      }, { passive: true });
     }
     statsOverlay.textContent = `${cachedViews.today.toLocaleString()} visit${cachedViews.today !== 1 ? "s" : ""} today · ${cachedViews.week.toLocaleString()} this week`;
     statsOverlay.style.display = "";
@@ -254,13 +266,13 @@ function renderCard(repo, index) {
        data-repo="${escapeHTML(repo.name)}"
        style="animation-delay:${delay}s;${bgImg}">
       ${CONFIG.showIcon ? `<div class="card-arrow"><i data-lucide="${getCardIcon(repo)}"></i></div>` : ""}
-      <div class="card-footer">
+      ${CONFIG.showTitle !== false || lang || stars ? `<div class="card-footer">
         ${lang}
-        <div class="card-title-row">
-          <span class="card-title">${escapeHTML(repo.name)}</span>
+        ${CONFIG.showTitle !== false || stars ? `<div class="card-title-row">
+          ${CONFIG.showTitle !== false ? `<span class="card-title">${escapeHTML(repo.name)}</span>` : ""}
           ${stars}
-        </div>
-      </div>
+        </div>` : ""}
+      </div>` : ""}
     </a>`;
 }
 
@@ -448,6 +460,10 @@ function openSettings() {
       <div class="setting-section">
         <span class="setting-section-title">Cards</span>
         <div class="setting-row">
+          <span class="setting-row-label">Show title</span>
+          <button class="setting-toggle ${CONFIG.showTitle !== false ? "on" : ""}" id="s-show-title"></button>
+        </div>
+        <div class="setting-row">
           <span class="setting-row-label">Show language</span>
           <button class="setting-toggle ${CONFIG.showLanguage ? "on" : ""}" id="s-show-language"></button>
         </div>
@@ -499,13 +515,41 @@ function openSettings() {
         </div>
       </details>
 
-      <a class="setting-privacy-link" href="/privacy" target="_blank">Privacy Policy</a>
+      <a class="setting-privacy-link" href="#" id="s-privacy-link">Privacy Policy</a>
     </div>
   `;
 
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add("visible"));
   refreshIcons();
+
+  // Privacy policy view
+  overlay.querySelector("#s-privacy-link").addEventListener("click", async function (e) {
+    e.preventDefault();
+    var modal = overlay.querySelector(".modal");
+    var res = await fetch("/privacy");
+    var html = await res.text();
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(html, "text/html");
+    var content = doc.querySelector(".container");
+    var backLink = content.querySelector(".back");
+    if (backLink) backLink.remove();
+    modal.innerHTML = `
+      <div class="modal-header">
+        <button class="modal-back"><i data-lucide="arrow-left"></i></button>
+        <span class="modal-title">Privacy Policy</span>
+        <button class="modal-close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-privacy">${content.innerHTML}</div>
+    `;
+    modal.scrollTop = 0;
+    refreshIcons();
+    modal.querySelector(".modal-back").addEventListener("click", function () {
+      overlay.remove();
+      openSettings();
+    });
+    modal.querySelector(".modal-close").addEventListener("click", close);
+  });
 
   // Toggle buttons
   overlay.querySelectorAll(".setting-toggle").forEach((btn) => {
@@ -527,6 +571,7 @@ function openSettings() {
   const apply = () => {
     CONFIG.title = document.getElementById("s-title").value.trim();
     CONFIG.showBio = document.getElementById("s-show-bio").classList.contains("on");
+    CONFIG.showTitle = document.getElementById("s-show-title").classList.contains("on");
     CONFIG.showLanguage = document.getElementById("s-show-language").classList.contains("on");
     CONFIG.showStars = document.getElementById("s-show-stars").classList.contains("on");
     CONFIG.showIcon = document.getElementById("s-show-icon").classList.contains("on");

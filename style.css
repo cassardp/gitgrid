@@ -25,10 +25,10 @@ body {
 /* Stats overlay */
 #stats-overlay {
   position: fixed;
-  bottom: 72px;
+  bottom: 75px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--bg);
   background: var(--text);
@@ -38,6 +38,12 @@ body {
   z-index: 50;
   pointer-events: none;
   white-space: nowrap;
+  transition: opacity 0.8s ease;
+}
+
+#stats-overlay.hidden {
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 /* Dev palette */
@@ -347,6 +353,7 @@ body {
   color: var(--text-2);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  margin-left: auto;
 }
 
 .card-price svg {
@@ -531,6 +538,39 @@ body {
   font-weight: 500;
   color: var(--text);
 }
+
+.modal-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-back:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.modal-back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.modal-privacy h1 { display: none; }
+.modal-privacy .updated { display: none; }
+.modal-privacy h2 { font-size: 15px; font-weight: 500; margin: 24px 0 8px; color: var(--text); }
+.modal-privacy p, .modal-privacy li { font-size: 14px; color: var(--text-2); line-height: 1.6; margin-bottom: 8px; }
+.modal-privacy ul { padding-left: 18px; }
+.modal-privacy li { margin-bottom: 4px; }
+.modal-privacy a { color: var(--text); }
+.modal-privacy code { font-size: 13px; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
 
 .modal-close {
   display: flex;
@@ -1013,6 +1053,7 @@ body:has(.landing) {
   #mobile-btn { display: none; }
   #mobile-btn + .palette-sep { display: none; }
   #dev-palette { bottom: 16px; }
+  #stats-overlay { bottom: 67px; font-size: 12px; }
   .page-title { padding: 24px 16px 32px; }
   .title { font-size: 28px; }
   .main { padding: 0 16px 80px; }
