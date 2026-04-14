@@ -18,5 +18,12 @@ CREATE TABLE IF NOT EXISTS images (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS views (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  count INTEGER DEFAULT 0,
+  PRIMARY KEY (user_id, date)
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_images_user_id ON images(user_id);

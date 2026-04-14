@@ -175,12 +175,11 @@ export async function handleDeleteAccount(request: Request, env: Env): Promise<R
 
 	// Delete images from R2
 	const images = await env.DB.prepare('SELECT r2_key FROM images WHERE user_id = ?').bind(user.id).all();
-	for (const img of images.results) {
-		await env.IMAGES.delete(img.r2_key as string);
-	}
+	await Promise.all(images.results.map(img => env.IMAGES.delete(img.r2_key as string)));
 
-	// Delete from D1 (images cascade via FK, but explicit for clarity)
+	// Delete from D1 (images/views cascade via FK, but explicit for clarity)
 	await env.DB.prepare('DELETE FROM images WHERE user_id = ?').bind(user.id).run();
+	await env.DB.prepare('DELETE FROM views WHERE user_id = ?').bind(user.id).run();
 	await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id).run();
 
 	return new Response(JSON.stringify({ ok: true }), {

@@ -1,6 +1,7 @@
 import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee } from "lucide";
 
 let cachedData = null;
+let cachedViews = null;
 let CONFIG = {};
 let currentUser = null;
 let isOwner = false;
@@ -69,12 +70,15 @@ function detectCardBrightness(card) {
   var img = new window.Image();
   img.onload = function () {
     var canvas = document.createElement("canvas");
-    var w = 50, h = 50;
+    var w = 40, h = 40;
     canvas.width = w;
     canvas.height = h;
     var ctx = canvas.getContext("2d");
-    var srcY = Math.floor(img.height * 0.65);
-    ctx.drawImage(img, 0, srcY, img.width, img.height - srcY, 0, 0, w, h);
+    var srcX = 0;
+    var srcY = Math.floor(img.height * 0.85);
+    var srcW = Math.floor(img.width * 0.2);
+    var srcH = img.height - srcY;
+    ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, w, h);
     var data = ctx.getImageData(0, 0, w, h).data;
     var total = 0;
     for (var i = 0; i < data.length; i += 4) {
@@ -171,7 +175,10 @@ function renderHeader(user) {
       i.setAttribute("data-lucide", previewMode ? "code" : "eye");
       this.appendChild(i);
       refreshIcons();
-      if (cachedData) renderWithDevConfig(cachedData.repos);
+      if (cachedData) {
+        renderHeader(cachedData.user);
+        renderWithDevConfig(cachedData.repos);
+      }
     });
     palette.querySelector("#settings-btn").addEventListener("click", openSettings);
     document.addEventListener("gitgrid:rerender", () => {
@@ -208,6 +215,19 @@ function renderHeader(user) {
     <p class="footer-text">${escapeHTML(footerText)}</p>
     <a class="footer-label" href="https://gitgrid.app" target="_blank">Made with GitGrid</a>
   `;
+
+  var statsOverlay = document.getElementById("stats-overlay");
+  if (isOwner && !previewMode && cachedViews) {
+    if (!statsOverlay) {
+      statsOverlay = document.createElement("div");
+      statsOverlay.id = "stats-overlay";
+      document.body.appendChild(statsOverlay);
+    }
+    statsOverlay.textContent = `${cachedViews.today.toLocaleString()} visit${cachedViews.today !== 1 ? "s" : ""} today · ${cachedViews.week.toLocaleString()} this week`;
+    statsOverlay.style.display = "";
+  } else if (statsOverlay) {
+    statsOverlay.style.display = "none";
+  }
   footerEl.style.alignItems = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
   if (CONFIG.showFooter === false) footerEl.querySelector(".footer-text").style.display = "none";
 
@@ -263,16 +283,18 @@ function renderGrid(repos) {
 function renderHiddenSection(repos) {
   var existing = document.querySelector(".hidden-section");
   if (existing) existing.remove();
+  var footerEl = document.getElementById("footer-actions");
 
   var hidden = repos.filter(function (r) { return !r.fork && isExcluded(r); });
-  if (!hidden.length) return;
+  if (!hidden.length) { footerEl.classList.remove("has-hidden"); return; }
+  footerEl.classList.add("has-hidden");
 
   hidden.sort(function (a, b) { return a.name.localeCompare(b.name); });
 
   var section = document.createElement("div");
   section.className = "hidden-section";
   section.innerHTML = `
-    <span class="hidden-section-title">Hidden</span>
+    <span class="hidden-section-title">Hidden repos</span>
     <div class="hidden-list">
       ${hidden.map(function (r) {
         return `
@@ -285,7 +307,7 @@ function renderHiddenSection(repos) {
   `;
   var list = section.querySelector(".hidden-list");
   list.style.justifyContent = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
-  document.getElementById("content").appendChild(section);
+  document.getElementById("footer-actions").insertAdjacentElement("afterend", section);
 
   section.querySelectorAll(".hidden-item").forEach(function (item) {
     item.addEventListener("click", async function () {
@@ -333,6 +355,10 @@ async function renderWithDevConfig(repos) {
       const { initDevConfig } = await import("./dev-config.js");
       initDevConfig(CONFIG, filtered);
     }
+  } else {
+    var existing = document.querySelector(".hidden-section");
+    if (existing) existing.remove();
+    document.getElementById("footer-actions").classList.remove("has-hidden");
   }
 }
 
@@ -709,6 +735,7 @@ async function init() {
     }
 
     CONFIG = portfolio.config || {};
+    cachedViews = portfolio.views || null;
     cachedData = { user: portfolio.user, repos: portfolio.repos };
 
     renderHeader(cachedData.user);

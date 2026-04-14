@@ -22,6 +22,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Stats overlay */
+#stats-overlay {
+  position: fixed;
+  bottom: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bg);
+  background: var(--text);
+  padding: 6px 14px;
+  border-radius: 10px;
+  opacity: 0.55;
+  z-index: 50;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 /* Dev palette */
 #dev-palette {
   position: fixed;
@@ -186,6 +204,10 @@ body {
   padding-bottom: 90px;
 }
 
+.footer-actions.has-hidden {
+  padding-bottom: 0;
+}
+
 
 .footer-text {
   font-size: 14px;
@@ -333,6 +355,11 @@ body {
   opacity: 0.6;
 }
 
+/* Light background image — soften dark text */
+.card[style*="background-image"]:not(.card-dark-bg) .card-title { opacity: 0.85; }
+.card[style*="background-image"]:not(.card-dark-bg) .card-meta-item { opacity: 0.7; }
+.card[style*="background-image"]:not(.card-dark-bg) .card-price { opacity: 0.75; }
+
 /* Dark background image — light text */
 .card-dark-bg .card-title { color: var(--surface); }
 .card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 75%, transparent); }
@@ -341,10 +368,11 @@ body {
 
 /* Hidden repos section (edit mode) */
 .hidden-section {
-  margin-top: 56px;
+  margin-top: 64px;
   border-top: 1px solid var(--icon-border);
   position: relative;
   padding-top: 40px;
+  padding-bottom: 90px;
 }
 
 .hidden-section-title {
