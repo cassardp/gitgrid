@@ -1,4 +1,4 @@
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee } from "lucide";
 
 let cachedData = null;
 let CONFIG = {};
@@ -7,7 +7,7 @@ let isOwner = false;
 let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
@@ -110,7 +110,8 @@ function buildSocialLinks(user) {
   if (githubUrl)
     links.push(`<a class="icon-btn icon-btn-social" href="${escapeHTML(githubUrl)}" target="_blank" rel="noopener noreferrer" title="GitHub"><i data-lucide="github"></i></a>`);
   if (twitterHandle) {
-    const tUrl = twitterHandle.startsWith("http") ? sanitizeURL(twitterHandle) : `https://x.com/${encodeURIComponent(twitterHandle)}`;
+    var tVal = twitterHandle.replace(/^@/, "");
+    var tUrl = tVal.includes("/") || tVal.includes(".") ? sanitizeURL(tVal.startsWith("http") ? tVal : `https://${tVal}`) : `https://x.com/${encodeURIComponent(tVal)}`;
     if (tUrl) links.push(`<a class="icon-btn icon-btn-social" href="${escapeHTML(tUrl)}" target="_blank" rel="noopener noreferrer" title="X / Twitter"><i data-lucide="twitter"></i></a>`);
   }
   if (blogUrl) {
@@ -120,6 +121,11 @@ function buildSocialLinks(user) {
   const email = CONFIG.email;
   if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     links.push(`<a class="icon-btn icon-btn-social" href="mailto:${escapeHTML(email)}" title="Email"><i data-lucide="mail"></i></a>`);
+  if (CONFIG.coffee) {
+    var cVal = CONFIG.coffee.replace(/^@/, "");
+    var coffeeUrl = cVal.includes("/") || cVal.includes(".") ? sanitizeURL(cVal.startsWith("http") ? cVal : `https://${cVal}`) : `https://buymeacoffee.com/${encodeURIComponent(cVal)}`;
+    if (coffeeUrl) links.push(`<a class="icon-btn icon-btn-social" href="${escapeHTML(coffeeUrl)}" target="_blank" rel="noopener noreferrer" title="Buy me a coffee"><i data-lucide="coffee"></i></a>`);
+  }
   return links.join("");
 }
 
@@ -405,6 +411,12 @@ function openSettings() {
             value="${escapeHTML(CONFIG.email || "")}"
             placeholder="Email">
         </div>
+        <div class="setting-group input-icon">
+          <i data-lucide="coffee"></i>
+          <input class="setting-input" id="s-coffee" type="text"
+            value="${escapeHTML(CONFIG.coffee || "")}"
+            placeholder="Buy Me a Coffee username or URL">
+        </div>
       </div>
 
       <div class="setting-section">
@@ -505,6 +517,7 @@ function openSettings() {
     CONFIG.twitter = document.getElementById("s-twitter").value.trim();
     CONFIG.blog = document.getElementById("s-blog").value.trim();
     CONFIG.email = document.getElementById("s-email").value.trim();
+    CONFIG.coffee = document.getElementById("s-coffee").value.trim();
 
     if (cachedData) {
       CONFIG.bio = document.getElementById("s-bio").value.trim();
@@ -618,10 +631,29 @@ async function init() {
   const username = getUsername();
 
   if (!username) {
-    // Landing page
+    document.querySelector(".main").classList.add("landing");
+    document.getElementById("page-title").remove();
+    document.getElementById("footer-actions").remove();
     document.getElementById("content").innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;min-height:80vh;">
-        <a href="/api/auth/login" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--text);color:var(--surface);border-radius:10px;text-decoration:none;font-weight:500;"><i data-lucide="github" style="width:18px;height:18px;"></i>Login with GitHub</a>
+      <div class="landing-content">
+        <div class="landing-top">
+          <p class="landing-badge">Your dev portfolio in 10 seconds</p>
+          <h1 class="landing-title">GitGrid</h1>
+          <p class="landing-tagline">Connect GitHub, get a visual portfolio. Built for makers and developers.</p>
+          <a href="/api/auth/login" class="landing-cta"><i data-lucide="github"></i>Get started with GitHub</a>
+          <a href="/cassardp" class="landing-demo" target="_blank" rel="noopener noreferrer">See a live portfolio <span>&rarr;</span></a>
+        </div>
+        <a href="/cassardp" class="landing-hero-link" target="_blank" rel="noopener noreferrer">
+          <img src="/hero.png" alt="GitGrid portfolio example" class="landing-hero">
+        </a>
+        <footer class="landing-footer">
+          <div class="landing-footer-links">
+            <a href="https://github.com/cassardp/gitgrid" target="_blank" rel="noopener noreferrer" title="GitHub"><i data-lucide="github"></i></a>
+            <a href="https://x.com/patricecassard" target="_blank" rel="noopener noreferrer" title="X / Twitter"><i data-lucide="twitter"></i></a>
+            <a href="https://buymeacoffee.com/patricecassard" target="_blank" rel="noopener noreferrer" title="Buy me a coffee"><i data-lucide="coffee"></i></a>
+          </div>
+          <p class="landing-footer-copy">&copy; ${new Date().getFullYear()} GitGrid</p>
+        </footer>
       </div>
     `;
     refreshIcons();

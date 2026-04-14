@@ -6,7 +6,7 @@ export async function handleGetConfig(username: string, env: Env): Promise<Respo
 	return Response.json({ username: user.username, config: JSON.parse(user.config as string || '{}') });
 }
 
-const ALLOWED_FIELDS = new Set(['title', 'bio', 'showBio', 'align', 'footer', 'showFooter', 'footerAlign', 'showLanguage', 'showStars', 'showIcon', 'github', 'twitter', 'blog', 'email', 'repos', 'sort']);
+const ALLOWED_FIELDS = new Set(['title', 'bio', 'showBio', 'align', 'footer', 'showFooter', 'footerAlign', 'showLanguage', 'showStars', 'showIcon', 'github', 'twitter', 'blog', 'email', 'coffee', 'repos', 'sort']);
 const ENUM_FIELDS: Record<string, Set<string>> = {
 	align: new Set(['left', 'center', 'right']),
 	footerAlign: new Set(['left', 'center', 'right']),
