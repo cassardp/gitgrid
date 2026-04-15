@@ -15,6 +15,12 @@ Turn your GitHub repos into a clean portfolio. Log in with GitHub, and your repo
 - **Hidden repos** — Hide any repo from your public portfolio
 - **Public pages** — Visitors see your portfolio with zero GitHub API calls (served from cache)
 - **OG meta tags** — Dynamic Open Graph tags for link previews
+- **Landing page** — Marketing page with hero image and CTA for unauthenticated visitors
+- **Visit stats** — Daily/weekly visit counter shown to the portfolio owner
+- **Social links** — GitHub, Twitter, blog, email, and Buy Me a Coffee
+- **Show/hide card titles** — Toggle card titles from settings
+- **Privacy policy** — Accessible directly from the settings modal
+- **SEO** — robots.txt, dynamic sitemap (`/sitemap.xml`), and JSON-LD structured data per portfolio
 
 ## Tech stack
 
