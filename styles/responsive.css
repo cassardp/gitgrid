@@ -15,4 +15,5 @@
   .card-frame { padding: 16px; }
   .avatar { width: 80px; height: 80px; margin-bottom: 16px; }
   .setting-row-pair { flex-direction: column; gap: 0; }
+  .card:hover { transform: none; box-shadow: none; }
 }
