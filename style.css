@@ -377,7 +377,7 @@ body {
 }
 /* Portrait — phone shape */
 .card-frame-portrait .card-frame-device {
-  height: 100%;
+  height: 95%;
   aspect-ratio: 9 / 19;
   border: 5px solid #1a1a1a;
   border-radius: 16% / 7.6%;
