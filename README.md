@@ -30,6 +30,33 @@ Turn your GitHub repos into a clean portfolio. Log in with GitHub, and your repo
 - **Icons** — Lucide
 - **Font** — Geist
 
+## Project structure
+
+```
+├── main.js              # App entry
+├── dev-config.js        # Edit-mode features (owner only)
+├── style.css            # CSS imports hub
+├── styles/              # Modular stylesheets
+│   ├── variables.css    # Custom properties, reset, keyframes
+│   ├── layout.css       # Page title, grid, footer
+│   ├── card.css         # Cards, screenshot frames
+│   ├── components.css   # Shared UI (buttons, overlays, panels)
+│   ├── modal.css        # Settings modal
+│   ├── editor.css       # Edit mode, image picker
+│   ├── landing.css      # Landing page
+│   └── responsive.css   # Breakpoints
+├── index.html           # SPA shell
+└── gitgrid-worker/      # Cloudflare Worker
+    └── src/
+        ├── index.ts     # Router
+        ├── auth.ts      # GitHub OAuth
+        ├── config.ts    # User config
+        ├── sync.ts      # GitHub sync
+        ├── images.ts    # R2 image handling
+        ├── portfolio.ts # Public portfolio API
+        └── screenshot.ts # Auto-screenshot capture
+```
+
 ## Development
 
 ```bash

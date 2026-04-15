@@ -7,7 +7,8 @@ function renderIcons(icons) {
 
 let workingConfig = null;
 let saveTimer = null;
-let stylesInjected = false;
+var captureQueue = Promise.resolve();
+var skipAutoCapture = new Set();
 
 var MAX_SIZE = 1200;
 var QUALITY = 0.82;
@@ -40,251 +41,7 @@ let filteredRepos = null;
 let dragState = null;
 let dragListenersAttached = false;
 
-function injectStyles() {
-  if (stylesInjected) return;
-  stylesInjected = true;
-  const style = document.createElement("style");
-  style.textContent = `
-    .dev-drag-placeholder {
-      border: 2px dashed var(--icon-border) !important;
-      background: transparent !important;
-      border-radius: var(--radius);
-      aspect-ratio: 1;
-      box-shadow: none !important;
-    }
-    .card.dev-dragging {
-      box-shadow: 0 12px 32px rgba(0,0,0,0.18) !important;
-      opacity: 0.92;
-      cursor: grabbing;
-    }
-    .dev-no-image {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: 1.5px dashed var(--icon-border);
-      background: none;
-      color: var(--text-3);
-      font-size: 13px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-      z-index: 1;
-    }
-    .dev-no-image:hover {
-      border-color: var(--text-2);
-      color: var(--text-2);
-    }
-    .dev-no-image svg { width: 14px; height: 14px; }
-    .card-dark-bg .dev-no-image {
-      border-color: color-mix(in srgb, var(--surface) 30%, transparent);
-      color: color-mix(in srgb, var(--surface) 50%, transparent);
-    }
-    .card-dark-bg .dev-no-image:hover {
-      border-color: color-mix(in srgb, var(--surface) 60%, transparent);
-      color: color-mix(in srgb, var(--surface) 70%, transparent);
-    }
-    .picker-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .picker-overlay.visible { opacity: 1; }
-    .picker {
-      background: var(--surface);
-      border-radius: 16px;
-      width: 100%;
-      max-width: 480px;
-      max-height: 80vh;
-      overflow-y: auto;
-      padding: 24px;
-      transform: translateY(8px);
-      transition: transform 0.2s;
-    }
-    .picker-overlay.visible .picker { transform: translateY(0); }
-    .picker-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .picker-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .picker-close {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      border: none;
-      background: none;
-      color: var(--text-3);
-      cursor: pointer;
-    }
-    .picker-close:hover { background: var(--bg); color: var(--text); }
-    .picker-close svg { width: 18px; height: 18px; }
-    .picker-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-      min-height: 120px;
-    }
-    .picker-item {
-      position: relative;
-      aspect-ratio: 1;
-      border-radius: 10px;
-      overflow: hidden;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color 0.2s;
-    }
-    .picker-item:hover { border-color: var(--text-2); }
-    .picker-item.selected { border-color: var(--text); }
-    .picker-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .picker-item-delete {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .picker-item:hover .picker-item-delete { opacity: 1; }
-    .picker-item-delete:hover { background: rgba(220,38,38,0.9); }
-    .picker-item-delete svg { width: 12px; height: 12px; }
-    .picker-actions {
-      display: flex;
-      gap: 8px;
-    }
-    .picker-btn {
-      flex: 1;
-      padding: 10px 16px;
-      border-radius: 10px;
-      border: none;
-      background: var(--text);
-      color: var(--surface);
-      font-size: 13px;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: opacity 0.2s;
-    }
-    .picker-btn:hover { opacity: 0.8; }
-    .picker-btn svg { width: 14px; height: 14px; }
-    .picker-empty {
-      grid-column: 1 / -1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 32px 20px;
-      color: var(--text-3);
-      font-size: 13px;
-    }
-    .picker-empty svg {
-      width: 32px;
-      height: 32px;
-      stroke-width: 1.5;
-    }
-    .dev-frame-toolbar {
-      position: absolute;
-      bottom: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px;
-      background: var(--surface);
-      border-radius: 14px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-      z-index: 3;
-      opacity: 0;
-      transition: opacity 0.2s;
-      pointer-events: none;
-    }
-    .card:hover .dev-frame-toolbar { opacity: 1; pointer-events: auto; }
-    .card:hover:has(.dev-frame-toolbar) { overflow: visible; }
-    .dev-editing .card:hover {
-      transform: none;
-      box-shadow: none;
-    }
-    .dev-frame-color {
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--icon-border);
-      border-radius: 50%;
-      padding: 0;
-      margin: 4px;
-      cursor: pointer;
-      background: none;
-      flex-shrink: 0;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    .dev-frame-color::-webkit-color-swatch-wrapper { padding: 0; }
-    .dev-frame-color::-webkit-color-swatch { border: none; border-radius: 50%; }
-    .dev-frame-color::-moz-color-swatch { border: none; border-radius: 50%; }
-    .dev-frame-sep {
-      width: 1px;
-      height: 20px;
-      background: var(--icon-border);
-      flex-shrink: 0;
-    }
-    .dev-frame-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 10px;
-      border: none;
-      background: none;
-      color: var(--text-3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding: 0;
-      flex-shrink: 0;
-      transition: transform 0.15s ease, color 0.15s;
-    }
-    .dev-frame-btn:hover { color: var(--text); transform: scale(1.25); }
-    .dev-frame-btn.on { color: var(--text); }
-    .dev-frame-btn svg { width: 16px; height: 16px; }
-  `;
-  document.head.appendChild(style);
-}
+function injectStyles() {}
 
 function getRC(name) {
   if (!workingConfig.repos) workingConfig.repos = {};
@@ -292,18 +49,11 @@ function getRC(name) {
   return workingConfig.repos[name];
 }
 
-async function saveConfig() {
-  const res = await fetch("/api/config", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(workingConfig),
-  });
-  if (!res.ok) console.error("Save failed");
-}
+var saveConfigFn = null;
 
 function debouncedSave() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveConfig, 300);
+  saveTimer = setTimeout(function() { if (saveConfigFn) saveConfigFn(); }, 300);
 }
 
 async function handleImageDrop(name, file) {
@@ -661,6 +411,10 @@ function applyImage(card, repo, imagePath) {
     frameDiv.className = "card-frame";
     var deviceDiv = document.createElement("div");
     deviceDiv.className = "card-frame-device";
+    var chrome = document.createElement("div");
+    chrome.className = "card-frame-chrome";
+    chrome.innerHTML = '<span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span>';
+    deviceDiv.appendChild(chrome);
     var img = document.createElement("img");
     img.className = "card-frame-img";
     img.src = "/img/" + imagePath;
@@ -678,7 +432,17 @@ function applyImage(card, repo, imagePath) {
     if (placeholder) placeholder.remove();
     addCardToolbar(card, repo);
   } else {
+    var oldKey = rc.screenshot;
     delete rc.screenshot;
+    skipAutoCapture.add(repo.name);
+    // Delete from R2 + D1
+    if (oldKey) {
+      fetch("/api/images", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: oldKey }),
+      });
+    }
     // Remove frame
     var frame = card.querySelector(".card-frame");
     if (frame) frame.remove();
@@ -696,6 +460,22 @@ function setupPlaceholder(card, repo) {
   if (rc.screenshot) return;
   var existing = card.querySelector(".dev-no-image");
   if (existing) existing.remove();
+
+  // Auto-capture if repo has a homepage URL and no image yet (skip if manually removed)
+  var hasHomepage = repo.homepage && /^https?:\/\//.test(repo.homepage);
+  if (hasHomepage && !card.dataset.capturing && !skipAutoCapture.has(repo.name)) {
+    card.dataset.capturing = "1";
+    var label = document.createElement("div");
+    label.className = "dev-no-image";
+    label.innerHTML = '<i data-lucide="loader"></i> Capturing\u2026';
+    card.appendChild(label);
+    renderIcons({ Loader });
+    var svg = label.querySelector("svg");
+    if (svg) svg.style.animation = "spin 1s linear infinite";
+    captureQueue = captureQueue.then(function() { return autoCapture(card, repo); });
+    return;
+  }
+
   var btn = document.createElement("button");
   btn.className = "dev-no-image";
   if (card.classList.contains("card-dark-bg")) btn.classList.add("dev-no-image-light");
@@ -707,6 +487,38 @@ function setupPlaceholder(card, repo) {
   });
   card.appendChild(btn);
   renderIcons({ Image });
+}
+
+async function fetchCapture(repoName) {
+  for (var attempts = 0; attempts < 3; attempts++) {
+    var r = await fetch("/api/screenshots/capture", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ repo: repoName }),
+    });
+    if (r.status === 429 && attempts < 2) {
+      await new Promise(function(res) { setTimeout(res, 3000); });
+      continue;
+    }
+    return await r.json();
+  }
+  return null;
+}
+
+async function autoCapture(card, repo) {
+  try {
+    var result = await fetchCapture(repo.name);
+    if (result && result.key) {
+      applyImage(card, repo, result.key);
+      debouncedSave();
+    } else {
+      delete card.dataset.capturing;
+      setupPlaceholder(card, repo);
+    }
+  } catch {
+    delete card.dataset.capturing;
+    setupPlaceholder(card, repo);
+  }
 }
 
 async function openImagePicker(card, repo) {
@@ -843,13 +655,8 @@ async function openImagePicker(card, repo) {
       const loaderSvg = captureBtn.querySelector("svg");
       if (loaderSvg) loaderSvg.style.animation = "spin 1s linear infinite";
       try {
-        const r = await fetch("/api/screenshots/capture", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ repo: repo.name }),
-        });
-        const result = await r.json();
-        if (result.key) {
+        var result = await fetchCapture(repo.name);
+        if (result && result.key) {
           applyImage(card, repo, result.key);
           close();
         } else {
@@ -871,8 +678,9 @@ function setupCardToolbar(card, repo) {
   addCardToolbar(card, repo);
 }
 
-export function initDevConfig(config, repos) {
+export function initDevConfig(config, repos, saveFn) {
   workingConfig = config;
+  saveConfigFn = saveFn;
   filteredRepos = repos;
   injectStyles();
   setupDocumentDragListeners();

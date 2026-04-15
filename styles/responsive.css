@@ -1,0 +1,18 @@
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 680px) {
+  #mobile-btn { display: none; }
+  #mobile-btn + .palette-sep { display: none; }
+  #dev-palette { bottom: 16px; }
+  #stats-overlay { bottom: 67px; font-size: 12px; }
+  .page-title { padding: 24px 16px 32px; }
+  .title { font-size: 28px; }
+  .main { padding: 0 16px 80px; }
+  .grid { grid-template-columns: 1fr; gap: 16px; }
+  .card-footer { padding: 0 20px 18px; }
+  .card-frame { padding: 16px; }
+  .avatar { width: 80px; height: 80px; margin-bottom: 16px; }
+  .setting-row-pair { flex-direction: column; gap: 0; }
+}

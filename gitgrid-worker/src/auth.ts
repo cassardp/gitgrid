@@ -25,7 +25,9 @@ async function verify(cookie: string, key: string): Promise<string | null> {
 	const cryptoKey = await crypto.subtle.importKey(
 		'raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
 	);
-	const sigBytes = new Uint8Array(sig.match(/.{2}/g)!.map(h => parseInt(h, 16)));
+	const hexPairs = sig.match(/.{2}/g);
+	if (!hexPairs) return null;
+	const sigBytes = new Uint8Array(hexPairs.map(h => parseInt(h, 16)));
 	const valid = await crypto.subtle.verify('HMAC', cryptoKey, sigBytes, enc.encode(payload));
 	if (!valid) return null;
 	return payload;

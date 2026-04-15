@@ -48,11 +48,6 @@ function hasExternalLink(repo) {
   return repo.homepage && !repo.homepage.includes("github.com");
 }
 
-function isAppStoreLink(repo) {
-  if (!repo.homepage) return false;
-  return repo.homepage.includes("apps.apple.com") || repo.homepage.includes("play.google.com");
-}
-
 
 function detectFrameRadius(card) {
   var img = card.querySelector(".card-frame-img");
@@ -82,7 +77,7 @@ function detectCardBrightness(card) {
     card.classList.remove("card-dark-bg");
     return;
   }
-  var match = bg.match(/url\(['"]?([^'")+]+)['"]?\)/);
+  var match = bg.match(/url\(['"]?([^'")]+)['"]?\)/);
   if (!match) return;
   var img = new window.Image();
   img.onload = function () {
@@ -295,7 +290,7 @@ function renderCard(repo, index) {
     var frameBg = rc.frameBg || "#DADAD7";
     var framePos = rc.framePosition || "center";
     inlineStyle += `--frame-bg:${escapeHTML(frameBg)};--frame-pos:${escapeHTML(framePos)};`;
-    frameHTML = `<div class="card-frame"><div class="card-frame-device"><img class="card-frame-img" src="/img/${escapeHTML(rc.screenshot)}" alt=""></div></div>`;
+    frameHTML = `<div class="card-frame"><div class="card-frame-device"><div class="card-frame-chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span></div><img class="card-frame-img" src="/img/${escapeHTML(rc.screenshot)}" alt=""></div></div>`;
   }
 
   var linkBadge = "";
@@ -416,7 +411,7 @@ async function renderWithDevConfig(repos) {
     renderHiddenSection(repos);
     if (filtered) {
       const { initDevConfig } = await import("./dev-config.js");
-      initDevConfig(CONFIG, filtered);
+      initDevConfig(CONFIG, filtered, saveConfig);
     }
   } else {
     document.body.classList.remove("dev-editing");

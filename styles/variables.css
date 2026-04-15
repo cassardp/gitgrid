@@ -1,0 +1,28 @@
+:root {
+  --bg: #f0f0ef;
+  --surface: #fafafa;
+  --text: #262626;
+  --text-2: #737373;
+  --text-3: #a3a3a3;
+  --icon-border: color-mix(in srgb, var(--text) 8%, transparent);
+  --toggle-on: var(--text);
+  --danger: #dc2626;
+  --radius: 16px;
+  --gap: 20px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "Geist", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

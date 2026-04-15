@@ -32,8 +32,21 @@ export async function handleCaptureScreenshot(request: Request, env: Env): Promi
 		return Response.json({ error: 'Invalid homepage URL' }, { status: 400 });
 	}
 
-	// Launch headless browser and capture screenshot
-	const browser = await puppeteer.launch(env.BROWSER);
+	// Launch headless browser with retry (Browser Rendering limits concurrent sessions)
+	let browser;
+	for (let attempt = 0; attempt < 3; attempt++) {
+		try {
+			browser = await puppeteer.launch(env.BROWSER);
+			break;
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : String(e);
+			if (msg.includes('429') && attempt < 2) {
+				await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+				continue;
+			}
+			return Response.json({ error: 'Browser unavailable, try again shortly' }, { status: 429 });
+		}
+	}
 	try {
 		const page = await browser.newPage();
 		await page.setViewport({ width: 1280, height: 800 });

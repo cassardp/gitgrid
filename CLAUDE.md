@@ -27,7 +27,16 @@ Vanilla JS portfolio platform deployed on Cloudflare Workers + D1 + R2. Users lo
 - **dev-config.js** — Edit-mode features (loaded dynamically when `isOwner`): pointer-event drag-drop card reorder with FLIP animations, image picker/upload to R2, visibility toggle (eye/eye-off). Has its own `renderIcons()` wrapper.
 - **vite.config.js** — Build output to `gitgrid-worker/public/`, dev proxy for `/api` and `/img` to Worker on port 8787
 - **index.html** — SPA shell
-- **style.css** — All styles
+- **style.css** — CSS import hub, loads all stylesheets from `styles/`
+- **styles/** — Modular CSS:
+  - `variables.css` — CSS custom properties, reset, keyframes
+  - `layout.css` — Page title, main container, grid, footer
+  - `card.css` — Card styles, screenshot frames, dark-bg variants
+  - `components.css` — Shared UI (icon buttons, overlays, panels, close buttons), dev palette, mobile preview, hidden repos, loading/error states
+  - `modal.css` — Settings modal (specific overrides)
+  - `editor.css` — Edit mode (drag-drop, frame toolbar, image picker)
+  - `landing.css` — Landing page
+  - `responsive.css` — Media queries (breakpoints: 1100px, 680px)
 
 ### Worker (`gitgrid-worker/`)
 
