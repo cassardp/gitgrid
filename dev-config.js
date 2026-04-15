@@ -1,4 +1,4 @@
-import { createIcons, X, Upload, Image, Trash2, RotateCcw, EyeOff, Plus } from "lucide";
+import { createIcons, X, Upload, Image, Trash2, RotateCcw, EyeOff, Plus, Camera, Loader } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -730,6 +730,8 @@ async function openImagePicker(card, repo) {
         </div>`).join("")
     : `<div class="picker-empty"><i data-lucide="image"></i>No images yet</div>`;
 
+  const hasHomepage = repo.homepage && /^https?:\/\//.test(repo.homepage);
+
   overlay.innerHTML = `
     <div class="picker">
       <div class="picker-header">
@@ -741,13 +743,16 @@ async function openImagePicker(card, repo) {
         <button class="picker-btn" id="picker-upload">
           <i data-lucide="upload"></i> Upload
         </button>
+        ${hasHomepage ? `<button class="picker-btn" id="picker-capture" title="${repo.homepage.replace(/[&"<>]/g, '')}">
+          <i data-lucide="camera"></i> Capture
+        </button>` : ''}
       </div>
     </div>
   `;
 
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add("visible"));
-  renderIcons({ X, Upload, Trash2, Image });
+  renderIcons({ X, Upload, Trash2, Image, Camera });
 
   const close = () => {
     overlay.classList.remove("visible");
@@ -826,6 +831,39 @@ async function openImagePicker(card, repo) {
     });
     input.click();
   });
+
+  // Capture screenshot from homepage URL
+  const captureBtn = document.getElementById("picker-capture");
+  if (captureBtn) {
+    captureBtn.addEventListener("click", async () => {
+      captureBtn.disabled = true;
+      captureBtn.innerHTML = '<i data-lucide="loader"></i> Capturing\u2026';
+      renderIcons({ Loader });
+      // Spin the loader icon
+      const loaderSvg = captureBtn.querySelector("svg");
+      if (loaderSvg) loaderSvg.style.animation = "spin 1s linear infinite";
+      try {
+        const r = await fetch("/api/screenshots/capture", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repo: repo.name }),
+        });
+        const result = await r.json();
+        if (result.key) {
+          applyImage(card, repo, result.key);
+          close();
+        } else {
+          captureBtn.innerHTML = '<i data-lucide="camera"></i> Failed';
+          renderIcons({ Camera });
+          captureBtn.disabled = false;
+        }
+      } catch {
+        captureBtn.innerHTML = '<i data-lucide="camera"></i> Failed';
+        renderIcons({ Camera });
+        captureBtn.disabled = false;
+      }
+    });
+  }
 
 }
 

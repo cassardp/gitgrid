@@ -2,6 +2,7 @@ import { handleLogin, handleCallback, handleLogout, handleMe, handleDeleteAccoun
 import { handleGetConfig, handlePutConfig } from './config';
 import { handleSync } from './sync';
 import { handleUploadImage, handleListImages, handleDeleteImage, handleServeImage } from './images';
+import { handleCaptureScreenshot } from './screenshot';
 import { handleGetPortfolio } from './portfolio';
 
 export default {
@@ -38,6 +39,9 @@ export default {
 			if (path === '/api/images' && method === 'POST') return handleUploadImage(request, env);
 			if (path === '/api/images' && method === 'GET') return handleListImages(request, env);
 			if (path === '/api/images' && method === 'DELETE') return handleDeleteImage(request, env);
+
+			// Screenshot capture
+			if (path === '/api/screenshots/capture' && method === 'POST') return handleCaptureScreenshot(request, env);
 
 			// Serve images from R2
 			if (path.startsWith('/img/')) {
