@@ -53,13 +53,30 @@ function isAppStoreLink(repo) {
   return repo.homepage.includes("apps.apple.com") || repo.homepage.includes("play.google.com");
 }
 
-function getCardIcon(repo) {
-  if (isAppStoreLink(repo)) return "smartphone";
-  if (hasExternalLink(repo)) return "globe";
-  return "github";
+
+function detectFrameRadius(card) {
+  var img = card.querySelector(".card-frame-img");
+  if (!img) return;
+  function apply() {
+    card.classList.toggle("card-frame-landscape", img.naturalWidth >= img.naturalHeight);
+    card.classList.toggle("card-frame-portrait", img.naturalWidth < img.naturalHeight);
+  }
+  if (img.naturalWidth) { apply(); return; }
+  img.addEventListener("load", apply);
 }
+window.detectFrameRadius = detectFrameRadius;
 
 function detectCardBrightness(card) {
+  if (card.classList.contains("card-has-frame")) {
+    var frameBg = getComputedStyle(card).getPropertyValue("--frame-bg").trim() || "#DADAD7";
+    var ctx = document.createElement("canvas").getContext("2d");
+    ctx.fillStyle = frameBg;
+    ctx.fillRect(0, 0, 1, 1);
+    var d = ctx.getImageData(0, 0, 1, 1).data;
+    var lum = 0.299 * d[0] + 0.587 * d[1] + 0.114 * d[2];
+    card.classList.toggle("card-dark-bg", lum < 128);
+    return;
+  }
   var bg = card.style.backgroundImage;
   if (!bg || bg === "none") {
     card.classList.remove("card-dark-bg");
@@ -261,21 +278,33 @@ function renderCard(repo, index) {
   const delay = Math.min(index * 0.06, 0.8);
   const rc = getRepoConfig(repo.name);
 
-  const lang = repo.language && CONFIG.showLanguage
+  const lang = repo.language && CONFIG.showLanguage !== false
     ? `<span class="card-meta-item">${escapeHTML(repo.language)}</span>` : "";
 
-  const stars = repo.stargazers_count > 0 && CONFIG.showStars
+  const stars = repo.stargazers_count > 0 && CONFIG.showStars !== false
     ? `<span class="card-price"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
-  const bgImg = rc.screenshot && /^[\w.\/-]+$/.test(rc.screenshot)
-    ? `background-image:url('/img/${rc.screenshot}');background-size:cover;background-position:center;` : "";
+  const hasScreenshot = rc.screenshot && /^[\w.\/-]+$/.test(rc.screenshot);
+  var frameHTML = "";
+  var cardClasses = "card";
+  var inlineStyle = `animation-delay:${delay}s;`;
+
+  if (hasScreenshot) {
+    cardClasses += " card-has-frame";
+
+    var frameBg = rc.frameBg || "#DADAD7";
+    var framePos = rc.framePosition || "center";
+    inlineStyle += `--frame-bg:${escapeHTML(frameBg)};--frame-pos:${escapeHTML(framePos)};`;
+    frameHTML = `<div class="card-frame"><div class="card-frame-device"><img class="card-frame-img" src="/img/${escapeHTML(rc.screenshot)}" alt=""></div></div>`;
+  }
 
   return `
-    <a class="card"
+    <a class="${cardClasses}"
        href="${escapeHTML(link)}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
-       style="animation-delay:${delay}s;${bgImg}">
-      ${CONFIG.showIcon ? `<div class="card-arrow"><i data-lucide="${getCardIcon(repo)}"></i></div>` : ""}
+       style="${inlineStyle}">
+      ${frameHTML}
+
       ${CONFIG.showTitle !== false || lang || stars ? `<div class="card-footer">
         ${lang}
         ${CONFIG.showTitle !== false || stars ? `<div class="card-title-row">
@@ -298,7 +327,8 @@ function renderGrid(repos) {
 
   content.innerHTML = `<div class="grid">${filtered.map(renderCard).join("")}</div>`;
   refreshIcons();
-  content.querySelectorAll(".card[style*='background-image']").forEach(detectCardBrightness);
+  content.querySelectorAll(".card-has-frame").forEach(detectFrameRadius);
+  content.querySelectorAll(".card").forEach(detectCardBrightness);
   return filtered;
 }
 
@@ -372,12 +402,14 @@ async function handleSync() {
 async function renderWithDevConfig(repos) {
   const filtered = renderGrid(repos);
   if (isOwner && !previewMode) {
+    document.body.classList.add("dev-editing");
     renderHiddenSection(repos);
     if (filtered) {
       const { initDevConfig } = await import("./dev-config.js");
       initDevConfig(CONFIG, filtered);
     }
   } else {
+    document.body.classList.remove("dev-editing");
     var existing = document.querySelector(".hidden-section");
     if (existing) existing.remove();
     document.getElementById("footer-actions").classList.remove("has-hidden");
@@ -475,15 +507,11 @@ function openSettings() {
         </div>
         <div class="setting-row">
           <span class="setting-row-label">Show language</span>
-          <button class="setting-toggle ${CONFIG.showLanguage ? "on" : ""}" id="s-show-language"></button>
+          <button class="setting-toggle ${CONFIG.showLanguage !== false ? "on" : ""}" id="s-show-language"></button>
         </div>
         <div class="setting-row">
           <span class="setting-row-label">Show stars</span>
-          <button class="setting-toggle ${CONFIG.showStars ? "on" : ""}" id="s-show-stars"></button>
-        </div>
-        <div class="setting-row">
-          <span class="setting-row-label">Show icon</span>
-          <button class="setting-toggle ${CONFIG.showIcon ? "on" : ""}" id="s-show-icon"></button>
+          <button class="setting-toggle ${CONFIG.showStars !== false ? "on" : ""}" id="s-show-stars"></button>
         </div>
       </div>
 
@@ -584,7 +612,7 @@ function openSettings() {
     CONFIG.showTitle = document.getElementById("s-show-title").classList.contains("on");
     CONFIG.showLanguage = document.getElementById("s-show-language").classList.contains("on");
     CONFIG.showStars = document.getElementById("s-show-stars").classList.contains("on");
-    CONFIG.showIcon = document.getElementById("s-show-icon").classList.contains("on");
+
     CONFIG.showFooter = document.getElementById("s-show-footer").classList.contains("on");
 
     const headerAlignBtn = overlay.querySelector('.setting-align[data-target="header"] .setting-align-btn.on');

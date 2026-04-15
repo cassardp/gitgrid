@@ -1,4 +1,4 @@
-import { createIcons, X, Upload, Image, Trash2 } from "lucide";
+import { createIcons, X, Upload, Image, Trash2, RotateCcw, EyeOff, Plus } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -57,34 +57,6 @@ function injectStyles() {
       opacity: 0.92;
       cursor: grabbing;
     }
-    .dev-remove-img {
-      position: absolute;
-      top: 18px;
-      left: 18px;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      border: none;
-      background: color-mix(in srgb, var(--text) 6%, transparent);
-      color: var(--text-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.2s, background 0.2s, color 0.2s;
-      z-index: 2;
-    }
-    .card:hover .dev-remove-img { opacity: 1; }
-    .card .card-arrow { opacity: 0; transition: opacity 0.2s, background 0.2s, color 0.2s; }
-    .card:hover .card-arrow { opacity: 1; }
-    .card[style*="background-image"] .dev-remove-img {
-      background: var(--bg);
-      color: var(--text-2);
-    }
-    .card[style*="background-image"] .dev-remove-img:hover { background: color-mix(in srgb, var(--danger) 80%, transparent); border-color: transparent; color: var(--surface); }
-    .dev-remove-img:hover { background: rgba(220,38,38,0.8); color: #fff; }
-    .dev-remove-img svg { width: 14px; height: 14px; }
     .dev-no-image {
       position: absolute;
       top: 50%;
@@ -108,6 +80,14 @@ function injectStyles() {
       color: var(--text-2);
     }
     .dev-no-image svg { width: 14px; height: 14px; }
+    .card-dark-bg .dev-no-image {
+      border-color: color-mix(in srgb, var(--surface) 30%, transparent);
+      color: color-mix(in srgb, var(--surface) 50%, transparent);
+    }
+    .card-dark-bg .dev-no-image:hover {
+      border-color: color-mix(in srgb, var(--surface) 60%, transparent);
+      color: color-mix(in srgb, var(--surface) 70%, transparent);
+    }
     .picker-overlay {
       position: fixed;
       inset: 0;
@@ -239,6 +219,69 @@ function injectStyles() {
       height: 32px;
       stroke-width: 1.5;
     }
+    .dev-frame-toolbar {
+      position: absolute;
+      bottom: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface);
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      z-index: 3;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .card:hover .dev-frame-toolbar { opacity: 1; pointer-events: auto; }
+    .card:hover:has(.dev-frame-toolbar) { overflow: visible; }
+    .dev-editing .card:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    .dev-frame-color {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--icon-border);
+      border-radius: 50%;
+      padding: 0;
+      margin: 4px;
+      cursor: pointer;
+      background: none;
+      flex-shrink: 0;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .dev-frame-color::-webkit-color-swatch-wrapper { padding: 0; }
+    .dev-frame-color::-webkit-color-swatch { border: none; border-radius: 50%; }
+    .dev-frame-color::-moz-color-swatch { border: none; border-radius: 50%; }
+    .dev-frame-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--icon-border);
+      flex-shrink: 0;
+    }
+    .dev-frame-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      border: none;
+      background: none;
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, color 0.15s;
+    }
+    .dev-frame-btn:hover { color: var(--text); transform: scale(1.25); }
+    .dev-frame-btn.on { color: var(--text); }
+    .dev-frame-btn svg { width: 16px; height: 16px; }
   `;
   document.head.appendChild(style);
 }
@@ -281,7 +324,7 @@ function setupDrag(card, repo) {
   var name = repo.name;
 
   card.addEventListener("pointerdown", function (e) {
-    if (e.target.closest("button, .card-arrow, input")) return;
+    if (e.target.closest("button, input")) return;
     if (e.button !== 0) return;
 
     var rect = card.getBoundingClientRect();
@@ -502,51 +545,162 @@ function setupDocumentDragListeners() {
   });
 }
 
-function addRemoveButton(card, repo) {
-  const existing = card.querySelector(".dev-remove-img");
+function addCardToolbar(card, repo) {
+  var existing = card.querySelector(".dev-frame-toolbar");
   if (existing) existing.remove();
-  const btn = document.createElement("button");
-  btn.className = "dev-remove-img";
-  btn.title = "Remove image";
-  btn.innerHTML = `<i data-lucide="trash-2"></i>`;
-  btn.addEventListener("click", (e) => {
+  var oldPlaceholder = card.querySelector(".dev-no-image");
+  if (oldPlaceholder) oldPlaceholder.remove();
+  var rc = getRC(repo.name);
+  var hasScreenshot = !!rc.screenshot;
+
+  var toolbar = document.createElement("div");
+  toolbar.className = "dev-frame-toolbar";
+
+  if (hasScreenshot) {
+    // Color picker
+    var colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = rc.frameBg || "#DADAD7";
+    colorInput.title = "Background color";
+    colorInput.className = "dev-frame-color";
+    colorInput.addEventListener("input", function (e) {
+      e.stopPropagation();
+      rc.frameBg = colorInput.value;
+      card.style.setProperty("--frame-bg", colorInput.value);
+      if (window.detectCardBrightness) window.detectCardBrightness(card);
+      debouncedSave();
+    });
+    colorInput.addEventListener("click", function (e) { e.stopPropagation(); });
+    toolbar.appendChild(colorInput);
+
+    // Reset (hidden until color is changed)
+    var resetBtn = document.createElement("button");
+    resetBtn.className = "dev-frame-btn";
+    resetBtn.title = "Reset";
+    resetBtn.innerHTML = '<i data-lucide="rotate-ccw"></i>';
+    resetBtn.style.display = rc.frameBg ? "" : "none";
+    resetBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      delete rc.frameBg;
+      card.style.setProperty("--frame-bg", "#DADAD7");
+      colorInput.value = "#DADAD7";
+      resetBtn.style.display = "none";
+      if (window.detectCardBrightness) window.detectCardBrightness(card);
+      debouncedSave();
+    });
+    colorInput.addEventListener("change", function () {
+      resetBtn.style.display = "";
+    });
+    toolbar.appendChild(resetBtn);
+
+    // Separator
+    var sep1 = document.createElement("div");
+    sep1.className = "dev-frame-sep";
+    toolbar.appendChild(sep1);
+  }
+
+  if (hasScreenshot) {
+    // Remove screenshot
+    var deleteBtn = document.createElement("button");
+    deleteBtn.className = "dev-frame-btn";
+    deleteBtn.title = "Remove screenshot";
+    deleteBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+    deleteBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      applyImage(card, repo, null);
+    });
+    toolbar.appendChild(deleteBtn);
+  } else {
+    // Add screenshot
+    var addBtn = document.createElement("button");
+    addBtn.className = "dev-frame-btn";
+    addBtn.title = "Add screenshot";
+    addBtn.innerHTML = '<i data-lucide="plus"></i>';
+    addBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openImagePicker(card, repo);
+    });
+    toolbar.appendChild(addBtn);
+  }
+
+  // Hide repo
+  var hideBtn = document.createElement("button");
+  hideBtn.className = "dev-frame-btn";
+  hideBtn.title = "Hide repo";
+  hideBtn.innerHTML = '<i data-lucide="eye-off"></i>';
+  hideBtn.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
-    applyImage(card, repo, null);
+    rc.hidden = true;
+    debouncedSave();
+    document.dispatchEvent(new CustomEvent("gitgrid:rerender"));
   });
-  card.appendChild(btn);
-  renderIcons({ Trash2 });
+  toolbar.appendChild(hideBtn);
+
+  toolbar.addEventListener("click", function (e) { e.stopPropagation(); });
+  card.appendChild(toolbar);
+  renderIcons({ Trash2, RotateCcw, EyeOff, Plus });
 }
 
 function applyImage(card, repo, imagePath) {
   const rc = getRC(repo.name);
   if (imagePath) {
     rc.screenshot = imagePath;
-    card.style.backgroundImage = `url('/img/${imagePath}')`;
-    card.style.backgroundSize = "cover";
-    card.style.backgroundPosition = "center";
+    // Remove old background-image styles (backward compat)
+    card.style.backgroundImage = "";
+    card.style.backgroundSize = "";
+    card.style.backgroundPosition = "";
+    // Remove existing frame if any
+    var oldFrame = card.querySelector(".card-frame");
+    if (oldFrame) oldFrame.remove();
+    // Create frame DOM
+    var frameDiv = document.createElement("div");
+    frameDiv.className = "card-frame";
+    var deviceDiv = document.createElement("div");
+    deviceDiv.className = "card-frame-device";
+    var img = document.createElement("img");
+    img.className = "card-frame-img";
+    img.src = "/img/" + imagePath;
+    img.alt = "";
+    deviceDiv.appendChild(img);
+    frameDiv.appendChild(deviceDiv);
+    card.insertBefore(frameDiv, card.firstChild);
+    // Apply frame classes
+    card.classList.add("card-has-frame");
+    card.style.setProperty("--frame-bg", rc.frameBg || "#DADAD7");
+    card.style.setProperty("--frame-pos", rc.framePosition || "center");
+    card.classList.remove("card-dark-bg");
+    if (window.detectFrameRadius) window.detectFrameRadius(card);
     const placeholder = card.querySelector(".dev-no-image");
     if (placeholder) placeholder.remove();
-    addRemoveButton(card, repo);
-    if (window.detectCardBrightness) window.detectCardBrightness(card);
+    addCardToolbar(card, repo);
   } else {
     delete rc.screenshot;
+    // Remove frame
+    var frame = card.querySelector(".card-frame");
+    if (frame) frame.remove();
+    card.classList.remove("card-has-frame", "card-frame-landscape", "card-frame-portrait", "card-dark-bg");
+    card.style.removeProperty("--frame-bg");
     card.style.backgroundImage = "";
-    card.classList.remove("card-dark-bg");
-    const removeBtn = card.querySelector(".dev-remove-img");
-    if (removeBtn) removeBtn.remove();
-    if (!card.querySelector(".dev-no-image")) {
-      addPlaceholder(card, repo);
-    }
+    addCardToolbar(card, repo);
+    setupPlaceholder(card, repo);
   }
   debouncedSave();
 }
 
-function addPlaceholder(card, repo) {
-  const btn = document.createElement("button");
+function setupPlaceholder(card, repo) {
+  var rc = getRC(repo.name);
+  if (rc.screenshot) return;
+  var existing = card.querySelector(".dev-no-image");
+  if (existing) existing.remove();
+  var btn = document.createElement("button");
   btn.className = "dev-no-image";
-  btn.innerHTML = `<i data-lucide="image"></i> Add image`;
-  btn.addEventListener("click", (e) => {
+  if (card.classList.contains("card-dark-bg")) btn.classList.add("dev-no-image-light");
+  btn.innerHTML = `<i data-lucide="image"></i> Add screenshot`;
+  btn.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
     openImagePicker(card, repo);
@@ -631,8 +785,14 @@ async function openImagePicker(card, repo) {
             delete workingConfig.repos[name].screenshot;
             const c = document.querySelector(`[data-repo="${name}"]`);
             if (c) {
+              var fr = c.querySelector(".card-frame");
+              if (fr) fr.remove();
+              var tb = c.querySelector(".dev-frame-toolbar");
+              if (tb) tb.remove();
+              c.classList.remove("card-has-frame", "card-frame-landscape", "card-frame-portrait", "card-dark-bg");
+              c.style.removeProperty("--frame-bg");
               c.style.backgroundImage = "";
-              if (!c.querySelector(".dev-no-image")) addPlaceholder(c, { name });
+              if (!c.querySelector(".dev-no-image")) setupPlaceholder(c, { name });
             }
           }
         }
@@ -669,37 +829,8 @@ async function openImagePicker(card, repo) {
 
 }
 
-function setupImageButton(card, repo) {
-  const rc = (workingConfig.repos && workingConfig.repos[repo.name]) || {};
-
-  if (rc.screenshot) {
-    addRemoveButton(card, repo);
-  } else {
-    addPlaceholder(card, repo);
-  }
-}
-
-function setupVisibilityToggle(card, repo) {
-  const rc = getRC(repo.name);
-  let arrow = card.querySelector(".card-arrow");
-  if (!arrow) {
-    arrow = document.createElement("div");
-    arrow.className = "card-arrow";
-    card.prepend(arrow);
-  }
-
-  arrow.title = "Hide repo";
-  arrow.innerHTML = `<i data-lucide="x"></i>`;
-
-  arrow.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    rc.hidden = true;
-    debouncedSave();
-    document.dispatchEvent(new CustomEvent("gitgrid:rerender"));
-  });
-
-  renderIcons({ X });
+function setupCardToolbar(card, repo) {
+  addCardToolbar(card, repo);
 }
 
 export function initDevConfig(config, repos) {
@@ -711,8 +842,8 @@ export function initDevConfig(config, repos) {
   cards.forEach((card, i) => {
     if (repos[i]) {
       setupDrag(card, repos[i]);
-      setupImageButton(card, repos[i]);
-      setupVisibilityToggle(card, repos[i]);
+      setupCardToolbar(card, repos[i]);
+      setupPlaceholder(card, repos[i]);
     }
   });
 }

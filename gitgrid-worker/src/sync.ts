@@ -64,6 +64,7 @@ export async function handleSync(request: Request, env: Env): Promise<Response> 
 			fork: r.fork,
 			private: r.private,
 			topics: r.topics || [],
+			license: r.license ? r.license.spdx_id : null,
 			created_at: r.created_at,
 			updated_at: r.updated_at,
 			pushed_at: r.pushed_at,
