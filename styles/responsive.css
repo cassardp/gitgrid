@@ -3,8 +3,6 @@
 }
 
 @media (max-width: 680px) {
-  #mobile-btn { display: none; }
-  #mobile-btn + .palette-sep { display: none; }
   #dev-palette { bottom: 16px; }
   #stats-overlay { bottom: 67px; font-size: 12px; }
   .page-title { padding: 24px 16px 32px; }

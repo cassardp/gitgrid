@@ -39,25 +39,51 @@
   border-color: color-mix(in srgb, var(--surface) 60%, transparent);
   color: color-mix(in srgb, var(--surface) 70%, transparent);
 }
-.dev-frame-toolbar {
+/* Card menu trigger — always visible in edit mode */
+.dev-card-menu {
   position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 24px;
+  left: 24px;
+  z-index: 4;
+}
+.dev-card-trigger {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--icon-border);
+  background: none;
+  color: var(--text-3);
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
-  background: var(--surface);
-  border-radius: 14px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  z-index: 3;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, border-color 0.15s;
 }
-.card:hover .dev-frame-toolbar { opacity: 1; pointer-events: auto; }
-.card:hover:has(.dev-frame-toolbar) { overflow: visible; }
+.dev-card-trigger:hover { color: var(--text); border-color: var(--text-3); }
+.dev-card-trigger svg { width: 15px; height: 15px; }
+.card-dark-bg .dev-card-trigger {
+  border-color: color-mix(in srgb, var(--surface) 25%, transparent);
+  color: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+.card-dark-bg .dev-card-trigger:hover {
+  border-color: color-mix(in srgb, var(--surface) 50%, transparent);
+  color: var(--surface);
+}
+/* Dropdown — vertical, hidden by default */
+.dev-card-dropdown {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  margin-top: 4px;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.dev-card-dropdown.open { display: flex; }
+.dev-editing .card { cursor: default; }
 .dev-editing .card:hover { transform: none; box-shadow: none; }
 .dev-frame-color {
   width: 20px;
@@ -76,15 +102,15 @@
 .dev-frame-color::-webkit-color-swatch { border: none; border-radius: 50%; }
 .dev-frame-color::-moz-color-swatch { border: none; border-radius: 50%; }
 .dev-frame-sep {
-  width: 1px;
-  height: 20px;
+  width: 20px;
+  height: 1px;
   background: var(--icon-border);
   flex-shrink: 0;
 }
 .dev-frame-btn {
   width: 28px;
   height: 28px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
   background: none;
   color: var(--text-3);
@@ -96,7 +122,7 @@
   flex-shrink: 0;
   transition: transform 0.15s ease, color 0.15s;
 }
-.dev-frame-btn:hover { color: var(--text); transform: scale(1.25); }
+.dev-frame-btn:hover { color: var(--text); transform: scale(1.15); }
 .dev-frame-btn.on { color: var(--text); }
 .dev-frame-btn svg { width: 16px; height: 16px; }
 

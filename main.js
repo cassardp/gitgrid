@@ -1,4 +1,4 @@
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft, ArrowUpRight } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft, ArrowUpRight } from "lucide";
 
 let cachedData = null;
 let cachedViews = null;
@@ -8,7 +8,7 @@ let isOwner = false;
 let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft, ArrowUpRight } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft, ArrowUpRight } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
@@ -155,36 +155,21 @@ function renderHeader(user) {
       <button class="icon-btn" id="sync-btn" title="Sync from GitHub">
         <i data-lucide="refresh-cw"></i>
       </button>
-      <span class="palette-sep"></span>
-      <button class="icon-btn" id="mobile-btn" title="Mobile preview">
-        <i data-lucide="smartphone"></i>
-      </button>
-      <span class="palette-sep"></span>
       <button class="icon-btn" id="preview-btn" title="Preview as visitor">
         <i data-lucide="eye"></i>
       </button>
-      <span class="palette-sep"></span>
       <button class="icon-btn" id="settings-btn" title="Settings">
         <i data-lucide="settings-2"></i>
       </button>
     `;
     document.body.appendChild(palette);
     palette.querySelector("#sync-btn").addEventListener("click", handleSync);
-    palette.querySelector("#mobile-btn").addEventListener("click", function () {
-      var isMobile = document.body.classList.toggle("mobile-preview");
-      this.classList.toggle("active");
-      this.querySelector("svg").remove();
-      var i = document.createElement("i");
-      i.setAttribute("data-lucide", isMobile ? "monitor" : "smartphone");
-      this.appendChild(i);
-      refreshIcons();
-    });
     palette.querySelector("#preview-btn").addEventListener("click", function () {
       previewMode = !previewMode;
-      this.classList.toggle("active");
+      palette.classList.toggle("palette-preview", previewMode);
       this.querySelector("svg").remove();
       var i = document.createElement("i");
-      i.setAttribute("data-lucide", previewMode ? "code" : "eye");
+      i.setAttribute("data-lucide", previewMode ? "x" : "eye");
       this.appendChild(i);
       refreshIcons();
       if (cachedData) {
@@ -298,8 +283,7 @@ function renderCard(repo, index) {
   var linkBadge = "";
   if (CONFIG.showLink !== false && hasExternalLink(repo)) {
     var hostname = new URL(repo.homepage).hostname.replace(/^www\./, "");
-    var label = repo.homepage.includes("apps.apple.com") ? "iOS"
-      : repo.homepage.includes("play.google.com") ? "Android"
+    var label = repo.homepage.includes("apps.apple.com") || repo.homepage.includes("play.google.com") ? "App"
       : hostname.charAt(0).toUpperCase() + hostname.slice(1);
     linkBadge = `<span class="card-price">${escapeHTML(label)} <i data-lucide="arrow-up-right"></i></span>`;
   }

@@ -1,4 +1,4 @@
-import { createIcons, X, Upload, Image, Trash2, RotateCcw, EyeOff, Plus, Camera, Loader, PanelTop, Square } from "lucide";
+import { createIcons, X, Upload, Image, Trash2, RotateCcw, EyeOff, Plus, Camera, Loader, PanelTop, Square, Settings2 } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -296,15 +296,33 @@ function setupDocumentDragListeners() {
 }
 
 function addCardToolbar(card, repo) {
-  var existing = card.querySelector(".dev-frame-toolbar");
+  var existing = card.querySelector(".dev-card-menu");
   if (existing) existing.remove();
   var oldPlaceholder = card.querySelector(".dev-no-image");
   if (oldPlaceholder) oldPlaceholder.remove();
   var rc = getRC(repo.name);
   var hasScreenshot = !!rc.screenshot;
 
-  var toolbar = document.createElement("div");
-  toolbar.className = "dev-frame-toolbar";
+  var menu = document.createElement("div");
+  menu.className = "dev-card-menu";
+
+  // Trigger button
+  var trigger = document.createElement("button");
+  trigger.className = "dev-card-trigger";
+  trigger.innerHTML = '<i data-lucide="settings-2"></i>';
+  trigger.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var wasOpen = dropdown.classList.contains("open");
+    // Close any other open dropdown
+    document.querySelectorAll(".dev-card-dropdown.open").forEach(function (d) { d.classList.remove("open"); });
+    if (!wasOpen) dropdown.classList.add("open");
+  });
+  menu.appendChild(trigger);
+
+  // Dropdown
+  var dropdown = document.createElement("div");
+  dropdown.className = "dev-card-dropdown";
 
   var surfaceColor = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim();
 
@@ -323,7 +341,7 @@ function addCardToolbar(card, repo) {
       debouncedSave();
     });
     colorInput.addEventListener("click", function (e) { e.stopPropagation(); });
-    toolbar.appendChild(colorInput);
+    dropdown.appendChild(colorInput);
 
     // Reset (hidden until color is changed)
     var resetBtn = document.createElement("button");
@@ -344,7 +362,7 @@ function addCardToolbar(card, repo) {
     colorInput.addEventListener("change", function () {
       resetBtn.style.display = "";
     });
-    toolbar.appendChild(resetBtn);
+    dropdown.appendChild(resetBtn);
 
     // Chrome toggle
     var chromeBtn = document.createElement("button");
@@ -362,12 +380,12 @@ function addCardToolbar(card, repo) {
       renderIcons({ PanelTop, Square });
       debouncedSave();
     });
-    toolbar.appendChild(chromeBtn);
+    dropdown.appendChild(chromeBtn);
 
     // Separator
     var sep1 = document.createElement("div");
     sep1.className = "dev-frame-sep";
-    toolbar.appendChild(sep1);
+    dropdown.appendChild(sep1);
   }
 
   if (hasScreenshot) {
@@ -379,9 +397,10 @@ function addCardToolbar(card, repo) {
     deleteBtn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
+      dropdown.classList.remove("open");
       applyImage(card, repo, null);
     });
-    toolbar.appendChild(deleteBtn);
+    dropdown.appendChild(deleteBtn);
   } else {
     // Add screenshot
     var addBtn = document.createElement("button");
@@ -391,9 +410,10 @@ function addCardToolbar(card, repo) {
     addBtn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
+      dropdown.classList.remove("open");
       openImagePicker(card, repo);
     });
-    toolbar.appendChild(addBtn);
+    dropdown.appendChild(addBtn);
   }
 
   // Hide repo
@@ -404,15 +424,17 @@ function addCardToolbar(card, repo) {
   hideBtn.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
+    dropdown.classList.remove("open");
     rc.hidden = true;
     debouncedSave();
     document.dispatchEvent(new CustomEvent("gitgrid:rerender"));
   });
-  toolbar.appendChild(hideBtn);
+  dropdown.appendChild(hideBtn);
 
-  toolbar.addEventListener("click", function (e) { e.stopPropagation(); });
-  card.appendChild(toolbar);
-  renderIcons({ Trash2, RotateCcw, EyeOff, Plus, PanelTop, Square });
+  menu.appendChild(dropdown);
+  menu.addEventListener("click", function (e) { e.stopPropagation(); });
+  card.appendChild(menu);
+  renderIcons({ Trash2, RotateCcw, EyeOff, Plus, PanelTop, Square, Settings2 });
 }
 
 function applyImage(card, repo, imagePath) {
@@ -626,7 +648,7 @@ async function openImagePicker(card, repo) {
             if (c) {
               var fr = c.querySelector(".card-frame");
               if (fr) fr.remove();
-              var tb = c.querySelector(".dev-frame-toolbar");
+              var tb = c.querySelector(".dev-card-menu");
               if (tb) tb.remove();
               c.classList.remove("card-has-frame", "card-frame-landscape", "card-frame-portrait", "card-dark-bg");
               c.style.removeProperty("--frame-bg");
@@ -706,9 +728,16 @@ export function initDevConfig(config, repos, saveFn) {
   filteredRepos = repos;
   injectStyles();
   setupDocumentDragListeners();
+  if (!window._devMenuClickOutside) {
+    window._devMenuClickOutside = true;
+    document.addEventListener("click", function () {
+      document.querySelectorAll(".dev-card-dropdown.open").forEach(function (d) { d.classList.remove("open"); });
+    });
+  }
   const cards = document.querySelectorAll(".grid .card");
   cards.forEach((card, i) => {
     if (repos[i]) {
+      card.addEventListener("click", function (e) { e.preventDefault(); });
       setupDrag(card, repos[i]);
       setupCardToolbar(card, repos[i]);
       setupPlaceholder(card, repos[i]);
