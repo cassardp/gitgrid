@@ -10,7 +10,8 @@ Turn your GitHub repos into a clean portfolio. Log in with GitHub, and your repo
 
 - **Auto-sync** — Pulls your repos and profile from GitHub (public + private)
 - **Drag & drop** — Reorder cards visually
-- **Screenshots** — Upload images per repo (client-side WebP optimization)
+- **Screenshots** — Upload images or auto-capture from homepage URLs (Cloudflare Browser Rendering)
+- **Screenshot frames** — Portrait (phone) and landscape (browser) frames with customizable colors
 - **Settings** — Title, bio, social links, footer, alignment — all editable in-app
 - **Hidden repos** — Hide any repo from your public portfolio
 - **Public pages** — Visitors see your portfolio with zero GitHub API calls (served from cache)
@@ -25,7 +26,7 @@ Turn your GitHub repos into a clean portfolio. Log in with GitHub, and your repo
 ## Tech stack
 
 - **Frontend** — Vanilla JS, no framework, no bundler runtime
-- **Backend** — Cloudflare Workers + D1 (SQLite) + R2 (images)
+- **Backend** — Cloudflare Workers + D1 (SQLite) + R2 (images) + Browser Rendering
 - **Auth** — GitHub App OAuth with HMAC-SHA256 sessions
 - **Icons** — Lucide
 - **Font** — Geist
