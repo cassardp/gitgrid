@@ -294,7 +294,7 @@ function renderCard(repo, index) {
   }
 
   var linkBadge = "";
-  if (hasExternalLink(repo)) {
+  if (CONFIG.showLink !== false && hasExternalLink(repo)) {
     var hostname = new URL(repo.homepage).hostname.replace(/^www\./, "");
     var label = repo.homepage.includes("apps.apple.com") ? "iOS"
       : repo.homepage.includes("play.google.com") ? "Android"
@@ -518,6 +518,10 @@ function openSettings() {
           <span class="setting-row-label">Show stars</span>
           <button class="setting-toggle ${CONFIG.showStars !== false ? "on" : ""}" id="s-show-stars"></button>
         </div>
+        <div class="setting-row">
+          <span class="setting-row-label">Show link</span>
+          <button class="setting-toggle ${CONFIG.showLink !== false ? "on" : ""}" id="s-show-link"></button>
+        </div>
       </div>
 
       <div class="setting-section">
@@ -617,6 +621,7 @@ function openSettings() {
     CONFIG.showTitle = document.getElementById("s-show-title").classList.contains("on");
     CONFIG.showLanguage = document.getElementById("s-show-language").classList.contains("on");
     CONFIG.showStars = document.getElementById("s-show-stars").classList.contains("on");
+    CONFIG.showLink = document.getElementById("s-show-link").classList.contains("on");
 
     CONFIG.showFooter = document.getElementById("s-show-footer").classList.contains("on");
 
