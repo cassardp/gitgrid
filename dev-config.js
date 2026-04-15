@@ -1,4 +1,4 @@
-import { createIcons, X, Upload, Image, Trash2, RotateCcw, EyeOff, Plus, Camera, Loader } from "lucide";
+import { createIcons, X, Upload, Image, Trash2, RotateCcw, EyeOff, Plus, Camera, Loader, PanelTop, Square } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -306,11 +306,13 @@ function addCardToolbar(card, repo) {
   var toolbar = document.createElement("div");
   toolbar.className = "dev-frame-toolbar";
 
+  var surfaceColor = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim();
+
   if (hasScreenshot) {
     // Color picker
     var colorInput = document.createElement("input");
     colorInput.type = "color";
-    colorInput.value = rc.frameBg || "#DADAD7";
+    colorInput.value = rc.frameBg || surfaceColor;
     colorInput.title = "Background color";
     colorInput.className = "dev-frame-color";
     colorInput.addEventListener("input", function (e) {
@@ -333,8 +335,8 @@ function addCardToolbar(card, repo) {
       e.preventDefault();
       e.stopPropagation();
       delete rc.frameBg;
-      card.style.setProperty("--frame-bg", "#DADAD7");
-      colorInput.value = "#DADAD7";
+      card.style.removeProperty("--frame-bg");
+      colorInput.value = surfaceColor;
       resetBtn.style.display = "none";
       if (window.detectCardBrightness) window.detectCardBrightness(card);
       debouncedSave();
@@ -343,6 +345,24 @@ function addCardToolbar(card, repo) {
       resetBtn.style.display = "";
     });
     toolbar.appendChild(resetBtn);
+
+    // Chrome toggle
+    var chromeBtn = document.createElement("button");
+    chromeBtn.className = "dev-frame-btn dev-chrome-toggle" + (rc.showChrome ? " on" : "");
+    chromeBtn.title = "Browser frame";
+    chromeBtn.innerHTML = rc.showChrome ? '<i data-lucide="square"></i>' : '<i data-lucide="panel-top"></i>';
+    chromeBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      rc.showChrome = !rc.showChrome;
+      if (!rc.showChrome) delete rc.showChrome;
+      card.classList.toggle("card-frame-show-chrome", !!rc.showChrome);
+      chromeBtn.classList.toggle("on", !!rc.showChrome);
+      chromeBtn.innerHTML = rc.showChrome ? '<i data-lucide="square"></i>' : '<i data-lucide="panel-top"></i>';
+      renderIcons({ PanelTop, Square });
+      debouncedSave();
+    });
+    toolbar.appendChild(chromeBtn);
 
     // Separator
     var sep1 = document.createElement("div");
@@ -392,7 +412,7 @@ function addCardToolbar(card, repo) {
 
   toolbar.addEventListener("click", function (e) { e.stopPropagation(); });
   card.appendChild(toolbar);
-  renderIcons({ Trash2, RotateCcw, EyeOff, Plus });
+  renderIcons({ Trash2, RotateCcw, EyeOff, Plus, PanelTop, Square });
 }
 
 function applyImage(card, repo, imagePath) {
@@ -413,7 +433,8 @@ function applyImage(card, repo, imagePath) {
     deviceDiv.className = "card-frame-device";
     var chrome = document.createElement("div");
     chrome.className = "card-frame-chrome";
-    chrome.innerHTML = '<span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span>';
+    var addrText = repo.homepage && !repo.homepage.includes("github.com") ? new URL(repo.homepage).hostname.replace(/^www\./, "") : repo.name;
+    chrome.innerHTML = '<span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-address">' + addrText + '</span>';
     deviceDiv.appendChild(chrome);
     var img = document.createElement("img");
     img.className = "card-frame-img";
@@ -424,7 +445,8 @@ function applyImage(card, repo, imagePath) {
     card.insertBefore(frameDiv, card.firstChild);
     // Apply frame classes
     card.classList.add("card-has-frame");
-    card.style.setProperty("--frame-bg", rc.frameBg || "#DADAD7");
+    card.classList.toggle("card-frame-show-chrome", !!rc.showChrome);
+    if (rc.frameBg) card.style.setProperty("--frame-bg", rc.frameBg);
     card.style.setProperty("--frame-pos", rc.framePosition || "center");
     card.classList.remove("card-dark-bg");
     if (window.detectFrameRadius) window.detectFrameRadius(card);

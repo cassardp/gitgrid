@@ -119,6 +119,10 @@
   max-height: 80%;
   border-radius: 12px;
 }
+.card-frame-show-chrome.card-frame-landscape .card-frame-device {
+  border: 1px solid var(--icon-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+}
 /* Portrait — phone shape */
 .card-frame-portrait .card-frame-device {
   height: 95%;
@@ -132,24 +136,44 @@
     corner-shape: superellipse(1.45);
   }
 }
-/* Browser chrome bar — visible only on landscape frames */
+/* Portrait — remove phone border when toggled */
+.card-frame-show-chrome.card-frame-portrait .card-frame-device {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+/* Browser chrome bar — visible on landscape frames when toggled */
 .card-frame-chrome {
   display: none;
   align-items: center;
   gap: 5px;
-  padding: 7px 10px;
-  background: var(--text);
+  padding: 6px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--icon-border);
 }
-.card-frame-landscape .card-frame-chrome { display: none; }
+.card-frame-show-chrome.card-frame-landscape .card-frame-chrome { display: flex; }
 .chrome-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--bg) 40%, transparent);
+  flex-shrink: 0;
 }
-.card-frame-landscape .chrome-dot:nth-child(1) { background: #ff5f57; }
-.card-frame-landscape .chrome-dot:nth-child(2) { background: #febc2e; }
-.card-frame-landscape .chrome-dot:nth-child(3) { background: #28c840; }
+.card-frame-show-chrome .chrome-dot:nth-child(1) { background: #ff5f57; }
+.card-frame-show-chrome .chrome-dot:nth-child(2) { background: #febc2e; }
+.card-frame-show-chrome .chrome-dot:nth-child(3) { background: #28c840; }
+.chrome-address {
+  flex: 1;
+  margin-left: 6px;
+  padding: 3px 10px;
+  background: var(--bg);
+  border-radius: 5px;
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .card-frame-img {
   width: 100%;
   height: 100%;

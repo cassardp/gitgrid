@@ -286,11 +286,13 @@ function renderCard(repo, index) {
 
   if (hasScreenshot) {
     cardClasses += " card-has-frame";
+    if (rc.showChrome) cardClasses += " card-frame-show-chrome";
 
     var frameBg = rc.frameBg || "var(--surface)";
     var framePos = rc.framePosition || "center";
     inlineStyle += `--frame-bg:${escapeHTML(frameBg)};--frame-pos:${escapeHTML(framePos)};`;
-    frameHTML = `<div class="card-frame"><div class="card-frame-device"><div class="card-frame-chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span></div><img class="card-frame-img" src="/img/${escapeHTML(rc.screenshot)}" alt=""></div></div>`;
+    var chromeAddr = repo.homepage && !repo.homepage.includes("github.com") ? new URL(repo.homepage).hostname.replace(/^www\./, "") : repo.name;
+    frameHTML = `<div class="card-frame"><div class="card-frame-device"><div class="card-frame-chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-address">${escapeHTML(chromeAddr)}</span></div><img class="card-frame-img" src="/img/${escapeHTML(rc.screenshot)}" alt=""></div></div>`;
   }
 
   var linkBadge = "";

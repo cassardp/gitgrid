@@ -101,8 +101,8 @@ body:has(.landing) { background: linear-gradient(to bottom, var(--bg) 50%, var(-
 }
 
 .landing-browser {
-  border: 2px solid var(--icon-border);
-  border-radius: 12px;
+  border: 1px solid var(--icon-border);
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.06);
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
@@ -117,14 +117,14 @@ body:has(.landing) { background: linear-gradient(to bottom, var(--bg) 50%, var(-
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: var(--surface);
   border-bottom: 1px solid var(--icon-border);
 }
 
 .landing-browser-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
 }
 
@@ -132,11 +132,11 @@ body:has(.landing) { background: linear-gradient(to bottom, var(--bg) 50%, var(-
 
 .landing-browser-address {
   flex: 1;
-  margin-left: 10px;
-  padding: 5px 12px;
+  margin-left: 8px;
+  padding: 4px 12px;
   background: var(--bg);
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-3);
   letter-spacing: 0.01em;
 }
