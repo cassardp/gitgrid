@@ -1,4 +1,4 @@
-import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft } from "lucide";
+import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft, ArrowUpRight } from "lucide";
 
 let cachedData = null;
 let cachedViews = null;
@@ -8,7 +8,7 @@ let isOwner = false;
 let previewMode = false;
 
 function refreshIcons() {
-  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft } });
+  createIcons({ icons: { Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Smartphone, Monitor, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft, ArrowUpRight } });
   document.querySelectorAll("svg[data-lucide]").forEach(el => el.removeAttribute("data-lucide"));
 }
 
@@ -282,7 +282,7 @@ function renderCard(repo, index) {
     ? `<span class="card-meta-item">${escapeHTML(repo.language)}</span>` : "";
 
   const stars = repo.stargazers_count > 0 && CONFIG.showStars !== false
-    ? `<span class="card-price"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
+    ? `<span class="card-top-badge"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
   const hasScreenshot = rc.screenshot && /^[\w.\/-]+$/.test(rc.screenshot);
   var frameHTML = "";
@@ -298,18 +298,28 @@ function renderCard(repo, index) {
     frameHTML = `<div class="card-frame"><div class="card-frame-device"><img class="card-frame-img" src="/img/${escapeHTML(rc.screenshot)}" alt=""></div></div>`;
   }
 
+  var linkBadge = "";
+  if (hasExternalLink(repo)) {
+    var hostname = new URL(repo.homepage).hostname.replace(/^www\./, "");
+    var label = repo.homepage.includes("apps.apple.com") ? "iOS"
+      : repo.homepage.includes("play.google.com") ? "Android"
+      : hostname.charAt(0).toUpperCase() + hostname.slice(1);
+    linkBadge = `<span class="card-price">${escapeHTML(label)} <i data-lucide="arrow-up-right"></i></span>`;
+  }
+
   return `
     <a class="${cardClasses}"
        href="${escapeHTML(link)}" target="_blank" rel="noopener"
        data-repo="${escapeHTML(repo.name)}"
        style="${inlineStyle}">
+      ${stars}
       ${frameHTML}
 
-      ${CONFIG.showTitle !== false || lang || stars ? `<div class="card-footer">
+      ${CONFIG.showTitle !== false || lang || linkBadge ? `<div class="card-footer">
         ${lang}
-        ${CONFIG.showTitle !== false || stars ? `<div class="card-title-row">
+        ${CONFIG.showTitle !== false || linkBadge ? `<div class="card-title-row">
           ${CONFIG.showTitle !== false ? `<span class="card-title">${escapeHTML(repo.name)}</span>` : ""}
-          ${stars}
+          ${linkBadge}
         </div>` : ""}
       </div>` : ""}
     </a>`;
