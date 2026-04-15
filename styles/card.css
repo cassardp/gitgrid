@@ -97,7 +97,7 @@
 .card-has-frame.card-dark-bg .card-top-badge { color: color-mix(in srgb, var(--surface) 75%, transparent); }
 
 /* Screenshot frame */
-.card-has-frame { background: var(--frame-bg, #DADAD7); }
+.card-has-frame { background: var(--frame-bg, var(--surface)); }
 .card-frame {
   flex: 1;
   display: flex;
@@ -117,7 +117,7 @@
 .card-frame-landscape .card-frame-device {
   width: 100%;
   max-height: 80%;
-  border: 3px solid var(--text);
+  border-radius: 12px;
 }
 /* Portrait — phone shape */
 .card-frame-portrait .card-frame-device {
@@ -140,7 +140,7 @@
   padding: 7px 10px;
   background: var(--text);
 }
-.card-frame-landscape .card-frame-chrome { display: flex; }
+.card-frame-landscape .card-frame-chrome { display: none; }
 .chrome-dot {
   width: 8px;
   height: 8px;

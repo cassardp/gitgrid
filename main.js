@@ -63,7 +63,7 @@ window.detectFrameRadius = detectFrameRadius;
 
 function detectCardBrightness(card) {
   if (card.classList.contains("card-has-frame")) {
-    var frameBg = getComputedStyle(card).getPropertyValue("--frame-bg").trim() || "#DADAD7";
+    var frameBg = getComputedStyle(card).getPropertyValue("--frame-bg").trim() || getComputedStyle(document.documentElement).getPropertyValue("--surface").trim();
     var ctx = document.createElement("canvas").getContext("2d");
     ctx.fillStyle = frameBg;
     ctx.fillRect(0, 0, 1, 1);
@@ -287,7 +287,7 @@ function renderCard(repo, index) {
   if (hasScreenshot) {
     cardClasses += " card-has-frame";
 
-    var frameBg = rc.frameBg || "#DADAD7";
+    var frameBg = rc.frameBg || "var(--surface)";
     var framePos = rc.framePosition || "center";
     inlineStyle += `--frame-bg:${escapeHTML(frameBg)};--frame-pos:${escapeHTML(framePos)};`;
     frameHTML = `<div class="card-frame"><div class="card-frame-device"><div class="card-frame-chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span></div><img class="card-frame-img" src="/img/${escapeHTML(rc.screenshot)}" alt=""></div></div>`;
@@ -756,14 +756,22 @@ async function init() {
     document.getElementById("content").innerHTML = `
       <div class="landing-content">
         <div class="landing-top">
-          <p class="landing-badge">Your dev portfolio in 10 seconds</p>
+          <p class="landing-badge">GitHub → Portfolio · 10s</p>
           <h1 class="landing-title">GitGrid</h1>
-          <p class="landing-tagline">Connect GitHub, get a visual portfolio. Built for makers and developers.</p>
-          <a href="/api/auth/login" class="landing-cta"><i data-lucide="github"></i>Get started with GitHub</a>
+          <p class="landing-tagline">Your GitHub repos, beautifully displayed. Metadata only.</p>
+          <a href="/api/auth/login" class="landing-cta"><i data-lucide="github"></i>Sign in with GitHub</a>
           <a href="/cassardp" class="landing-demo" target="_blank" rel="noopener noreferrer">See a live portfolio <span>&rarr;</span></a>
         </div>
         <a href="/cassardp" class="landing-hero-link" target="_blank" rel="noopener noreferrer">
-          <img src="/hero.png" alt="GitGrid portfolio example" class="landing-hero">
+          <div class="landing-browser">
+            <div class="landing-browser-bar">
+              <span class="landing-browser-dot" style="background:#ff5f57"></span>
+              <span class="landing-browser-dot" style="background:#febc2e"></span>
+              <span class="landing-browser-dot" style="background:#28c840"></span>
+              <span class="landing-browser-address">gitgrid.app/cassardp</span>
+            </div>
+            <img src="/hero.png" alt="GitGrid portfolio example" class="landing-hero">
+          </div>
         </a>
         <footer class="landing-footer">
           <div class="landing-footer-links">
