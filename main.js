@@ -783,7 +783,7 @@ async function init() {
               <span class="landing-browser-dot" style="background:#28c840"></span>
               <span class="landing-browser-address">gitgrid.app/cassardp</span>
             </div>
-            <img src="/hero.png" alt="GitGrid portfolio example" class="landing-hero">
+            <img src="/hero.webp" alt="GitGrid portfolio example" class="landing-hero">
           </div>
         </a>
         <footer class="landing-footer">

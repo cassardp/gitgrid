@@ -1,5 +1,5 @@
 /* Landing */
-body:has(.landing) { background: linear-gradient(to bottom, var(--bg) 50%, var(--surface) 70%); overscroll-behavior: none; }
+html:has(.landing), body:has(.landing) { background: var(--bg); overscroll-behavior: none; }
 
 .main.landing { max-width: 100%; padding: 0; }
 
