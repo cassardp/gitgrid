@@ -53,7 +53,7 @@ export default {
 			if (path === '/robots.txt') {
 				return new Response(
 					'User-agent: *\nAllow: /\n\nSitemap: https://gitgrid.app/sitemap.xml',
-					{ headers: { 'Content-Type': 'text/plain' } }
+					{ headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'public, max-age=86400' } }
 				);
 			}
 
@@ -67,7 +67,7 @@ export default {
 				).join('\n');
 				return new Response(
 					`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://gitgrid.app/</loc></url>\n${urls}\n</urlset>`,
-					{ headers: { 'Content-Type': 'application/xml' } }
+					{ headers: { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' } }
 				);
 			}
 
@@ -85,19 +85,23 @@ export default {
 					const user = reposData.user || {};
 					const repos = (reposData.repos || []).filter((r: any) => !r.private || r.homepage);
 					const name = esc(config.title || user.name || user.login || username);
-					const bio = esc(config.bio || user.bio || '');
+					const rawBio = config.bio || user.bio || `Code portfolio by ${user.login || username} on GitGrid.`;
+					const bio = esc(rawBio);
 					const avatar = user.avatar_url ? esc(user.avatar_url + '&s=400') : '';
+					const canonical = `https://gitgrid.app/${esc(username)}`;
 
 					const ogTags = [
 						`<title>${name} — GitGrid</title>`,
+						`<meta name="description" content="${bio}">`,
+						`<link rel="canonical" href="${canonical}">`,
 						`<meta property="og:title" content="${name} — GitGrid">`,
-						bio && `<meta property="og:description" content="${bio}">`,
+						`<meta property="og:description" content="${bio}">`,
 						avatar && `<meta property="og:image" content="${avatar}">`,
-						`<meta property="og:url" content="https://gitgrid.app/${esc(username)}">`,
+						`<meta property="og:url" content="${canonical}">`,
 						`<meta property="og:type" content="profile">`,
 						`<meta name="twitter:card" content="summary">`,
 						`<meta name="twitter:title" content="${name} — GitGrid">`,
-						bio && `<meta name="twitter:description" content="${bio}">`,
+						`<meta name="twitter:description" content="${bio}">`,
 						avatar && `<meta name="twitter:image" content="${avatar}">`,
 					].filter(Boolean).join('\n    ');
 
@@ -134,9 +138,16 @@ export default {
 					const ldScript = `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
 
 					const assetRes = await env.ASSETS.fetch(request);
-					const html = (await assetRes.text()).replace('<title>Portfolio</title>', ogTags + '\n    ' + ldScript);
+					const html = (await assetRes.text()).replace(
+						/<!--meta:start-->[\s\S]*?<!--meta:end-->/,
+						ogTags + '\n    ' + ldScript
+					);
 					return new Response(html, {
-						headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Frame-Options': 'DENY' },
+						headers: {
+							'Content-Type': 'text/html; charset=utf-8',
+							'X-Frame-Options': 'DENY',
+							'Cache-Control': 'public, max-age=60, s-maxage=300',
+						},
 					});
 				}
 			}
