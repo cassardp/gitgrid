@@ -42,7 +42,7 @@ html:has(.landing), body:has(.landing) { background: var(--bg); overscroll-behav
 .landing-title {
   font-size: 80px;
   font-weight: 600;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
   line-height: 1;
   color: #0a0a0a;
   opacity: 0;
