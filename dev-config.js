@@ -1,4 +1,4 @@
-import { createIcons, ImagePlus, ImageOff, Trash2, RotateCcw, Globe, Loader, PanelTop, Square, SquareDashed, Smartphone, Monitor, Ellipsis } from "lucide";
+import { createIcons, ImagePlus, ImageOff, Trash2, RotateCcw, Globe, Loader, Smartphone, Tablet, Monitor, Square, SquareDashed, PanelTop, Ellipsis } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -364,65 +364,83 @@ function addCardToolbar(card, repo) {
     dropdown.appendChild(resetBtn);
 
     var chromeImg = card.querySelector(".card-frame-img");
-    function isCardPortrait() {
-      if (rc.frameStyle === "phone") return true;
-      if (rc.frameStyle === "browser") return false;
-      if (card.classList.contains("card-frame-portrait")) return true;
-      if (card.classList.contains("card-frame-landscape")) return false;
-      if (chromeImg && chromeImg.naturalWidth) return chromeImg.naturalWidth < chromeImg.naturalHeight;
-      return false;
+    var MODE_CYCLE = ["mobile", "tablet", "desktop"];
+    var MODE_ICON = { mobile: "smartphone", tablet: "tablet", desktop: "monitor" };
+    var MODE_LABEL = { mobile: "Mobile", tablet: "Tablet", desktop: "Desktop" };
+    function currentMode() {
+      var m = window.getFrameMode(rc);
+      if (m) return m;
+      if (chromeImg && chromeImg.naturalWidth) {
+        return chromeImg.naturalWidth < chromeImg.naturalHeight ? "mobile" : "tablet";
+      }
+      return "tablet";
     }
+    function currentDecorated() {
+      return window.isFrameDecorated(rc);
+    }
+    // Separator after color group
+    var sepColor = document.createElement("div");
+    sepColor.className = "dev-frame-sep";
+    dropdown.appendChild(sepColor);
 
-    // Mode toggle (phone / desktop)
     var modeBtn = document.createElement("button");
     modeBtn.className = "dev-frame-btn";
-    modeBtn.title = "Frame mode";
     function updateModeIcon() {
-      modeBtn.innerHTML = '<i data-lucide="' + (isCardPortrait() ? "monitor" : "smartphone") + '"></i>';
-      renderIcons({ Smartphone, Monitor });
+      var m = currentMode();
+      modeBtn.title = MODE_LABEL[m];
+      modeBtn.innerHTML = '<i data-lucide="' + MODE_ICON[m] + '"></i>';
+      renderIcons({ Smartphone, Tablet, Monitor });
     }
     updateModeIcon();
     if (chromeImg && !chromeImg.complete) chromeImg.addEventListener("load", updateModeIcon, { once: true });
     modeBtn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      var nextMode = isCardPortrait() ? "browser" : "phone";
-      rc.frameStyle = nextMode;
-      card.dataset.frameStyle = nextMode;
-      card.classList.toggle("card-frame-portrait", nextMode === "phone");
-      card.classList.toggle("card-frame-landscape", nextMode === "browser");
+      var next = MODE_CYCLE[(MODE_CYCLE.indexOf(currentMode()) + 1) % MODE_CYCLE.length];
+      rc.frameMode = next;
+      delete rc.frameStyle;
+      delete rc.showChrome;
+      card.dataset.frameMode = next;
+      delete card.dataset.frameStyle;
+      card.classList.remove("card-frame-mobile", "card-frame-tablet", "card-frame-desktop", "card-frame-portrait", "card-frame-landscape", "card-frame-show-chrome");
+      card.classList.add("card-frame-" + next);
       updateModeIcon();
-      updateChromeIcon();
+      updateDecorIcon();
       if (window.detectCardBrightness) window.detectCardBrightness(card);
       debouncedSave();
     });
     dropdown.appendChild(modeBtn);
 
-    // Chrome toggle
-    var chromeBtn = document.createElement("button");
-    chromeBtn.className = "dev-frame-btn dev-chrome-toggle" + (rc.showChrome ? " on" : "");
-    chromeBtn.title = "Frame style";
-    function updateChromeIcon() {
-      var portrait = isCardPortrait();
+    // Decoration toggle (border on mobile/tablet, chrome on desktop)
+    var decorBtn = document.createElement("button");
+    decorBtn.className = "dev-frame-btn";
+    function updateDecorIcon() {
+      var mode = currentMode();
+      var on = currentDecorated();
       var icon;
-      if (portrait) icon = rc.showChrome ? "square" : "square-dashed";
-      else icon = rc.showChrome ? "square" : "panel-top";
-      chromeBtn.innerHTML = '<i data-lucide="' + icon + '"></i>';
-      renderIcons({ PanelTop, Square, SquareDashed });
+      if (mode === "desktop") icon = on ? "panel-top" : "square-dashed";
+      else icon = on ? "square" : "square-dashed";
+      decorBtn.title = mode === "desktop" ? "Browser chrome" : "Device border";
+      decorBtn.innerHTML = '<i data-lucide="' + icon + '"></i>';
+      renderIcons({ Square, SquareDashed, PanelTop });
     }
-    updateChromeIcon();
-    if (chromeImg && !chromeImg.complete) chromeImg.addEventListener("load", updateChromeIcon, { once: true });
-    chromeBtn.addEventListener("click", function (e) {
+    updateDecorIcon();
+    decorBtn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      rc.showChrome = !rc.showChrome;
-      if (!rc.showChrome) delete rc.showChrome;
-      card.classList.toggle("card-frame-show-chrome", !!rc.showChrome);
-      chromeBtn.classList.toggle("on", !!rc.showChrome);
-      updateChromeIcon();
+      var next = !currentDecorated();
+      rc.frameDecorated = next;
+      delete rc.showChrome;
+      card.classList.toggle("card-frame-decorated", next);
+      updateDecorIcon();
       debouncedSave();
     });
-    dropdown.appendChild(chromeBtn);
+    dropdown.appendChild(decorBtn);
+
+    // Separator before destructive actions (remove screenshot + hide)
+    var sepDestructive = document.createElement("div");
+    sepDestructive.className = "dev-frame-sep";
+    dropdown.appendChild(sepDestructive);
 
     // Remove screenshot
     var deleteBtn = document.createElement("button");
@@ -464,12 +482,12 @@ function addCardToolbar(card, repo) {
       triggerUpload(card, repo);
     });
     dropdown.appendChild(addBtn);
-  }
 
-  // Separator before hide (visually isolates the destructive action)
-  var sep = document.createElement("div");
-  sep.className = "dev-frame-sep";
-  dropdown.appendChild(sep);
+    // Separator before hide
+    var sepHide = document.createElement("div");
+    sepHide.className = "dev-frame-sep";
+    dropdown.appendChild(sepHide);
+  }
 
   // Hide repo
   var hideBtn = document.createElement("button");
@@ -489,7 +507,7 @@ function addCardToolbar(card, repo) {
   menu.appendChild(dropdown);
   menu.addEventListener("click", function (e) { e.stopPropagation(); });
   card.appendChild(menu);
-  renderIcons({ ImageOff, ImagePlus, Globe, Trash2, RotateCcw, PanelTop, Square, SquareDashed, Smartphone, Monitor, Ellipsis });
+  renderIcons({ ImageOff, ImagePlus, Globe, Trash2, RotateCcw, Smartphone, Tablet, Monitor, Square, SquareDashed, PanelTop, Ellipsis });
 }
 
 function applyImage(card, repo, imagePath) {
@@ -530,12 +548,13 @@ function applyImage(card, repo, imagePath) {
     card.insertBefore(frameDiv, card.firstChild);
     // Apply frame classes
     card.classList.add("card-has-frame");
-    card.classList.toggle("card-frame-show-chrome", !!rc.showChrome);
     if (rc.frameBg) card.style.setProperty("--frame-bg", rc.frameBg);
     card.style.setProperty("--frame-pos", rc.framePosition || "center");
     card.classList.remove("card-dark-bg");
-    if (rc.frameStyle) card.dataset.frameStyle = rc.frameStyle;
-    else delete card.dataset.frameStyle;
+    var mode = window.getFrameMode(rc);
+    if (mode) card.dataset.frameMode = mode;
+    else delete card.dataset.frameMode;
+    card.classList.toggle("card-frame-decorated", window.isFrameDecorated(rc));
     if (window.detectFrameRadius) window.detectFrameRadius(card);
     const placeholder = card.querySelector(".dev-no-image");
     if (placeholder) placeholder.remove();
@@ -554,7 +573,7 @@ function applyImage(card, repo, imagePath) {
     // Remove frame
     var frame = card.querySelector(".card-frame");
     if (frame) frame.remove();
-    card.classList.remove("card-has-frame", "card-frame-landscape", "card-frame-portrait", "card-dark-bg");
+    card.classList.remove("card-has-frame", "card-frame-mobile", "card-frame-tablet", "card-frame-desktop", "card-frame-portrait", "card-frame-landscape", "card-frame-show-chrome", "card-frame-decorated", "card-dark-bg");
     card.style.removeProperty("--frame-bg");
     card.style.backgroundImage = "";
     addCardToolbar(card, repo);

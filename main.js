@@ -49,18 +49,35 @@ function hasExternalLink(repo) {
 }
 
 
+function getFrameMode(rc) {
+  if (rc.frameMode) return rc.frameMode;
+  if (rc.frameStyle === "phone") return "mobile";
+  if (rc.frameStyle === "browser") return "desktop";
+  return null;
+}
+window.getFrameMode = getFrameMode;
+
+function isFrameDecorated(rc) {
+  if (typeof rc.frameDecorated === "boolean") return rc.frameDecorated;
+  if (rc.frameStyle === "phone") return !rc.showChrome;
+  if (rc.frameStyle === "browser") return !!rc.showChrome;
+  if (typeof rc.showChrome === "boolean") return rc.showChrome;
+  return true;
+}
+window.isFrameDecorated = isFrameDecorated;
+
 function detectFrameRadius(card) {
-  var forced = card.dataset.frameStyle;
-  if (forced) {
-    card.classList.toggle("card-frame-portrait", forced === "phone");
-    card.classList.toggle("card-frame-landscape", forced === "browser");
-    return;
+  function applyMode(mode) {
+    card.classList.toggle("card-frame-mobile", mode === "mobile");
+    card.classList.toggle("card-frame-tablet", mode === "tablet");
+    card.classList.toggle("card-frame-desktop", mode === "desktop");
   }
+  var forced = card.dataset.frameMode;
+  if (forced) { applyMode(forced); return; }
   var img = card.querySelector(".card-frame-img");
   if (!img) return;
   function apply() {
-    card.classList.toggle("card-frame-landscape", img.naturalWidth >= img.naturalHeight);
-    card.classList.toggle("card-frame-portrait", img.naturalWidth < img.naturalHeight);
+    applyMode(img.naturalWidth < img.naturalHeight ? "mobile" : "tablet");
   }
   if (img.naturalWidth) { apply(); return; }
   img.addEventListener("load", apply);
@@ -277,9 +294,9 @@ function renderCard(repo, index) {
 
   if (hasScreenshot) {
     cardClasses += " card-has-frame";
-    if (rc.showChrome) cardClasses += " card-frame-show-chrome";
-    if (rc.frameStyle === "phone") cardClasses += " card-frame-portrait";
-    else if (rc.frameStyle === "browser") cardClasses += " card-frame-landscape";
+    var frameMode = getFrameMode(rc);
+    if (frameMode) cardClasses += " card-frame-" + frameMode;
+    if (isFrameDecorated(rc)) cardClasses += " card-frame-decorated";
 
     var frameBg = rc.frameBg || "var(--surface)";
     var framePos = rc.framePosition || "center";
@@ -296,12 +313,12 @@ function renderCard(repo, index) {
     linkBadge = `<span class="card-link">${escapeHTML(label)} <i data-lucide="arrow-up-right"></i></span>`;
   }
 
-  var frameStyleAttr = rc.frameStyle ? ` data-frame-style="${escapeHTML(rc.frameStyle)}"` : "";
+  var frameModeAttr = hasScreenshot && frameMode ? ` data-frame-mode="${frameMode}"` : "";
 
   return `
     <a class="${cardClasses}"
        href="${escapeHTML(link)}" target="_blank" rel="noopener"
-       data-repo="${escapeHTML(repo.name)}"${frameStyleAttr}
+       data-repo="${escapeHTML(repo.name)}"${frameModeAttr}
        style="${inlineStyle}">
       ${linkBadge}
       ${frameHTML}
