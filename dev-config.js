@@ -420,7 +420,8 @@ function addCardToolbar(card, repo) {
       var icon;
       if (mode === "desktop") icon = on ? "panel-top" : "square-dashed";
       else icon = on ? "square" : "square-dashed";
-      decorBtn.title = mode === "desktop" ? "Browser chrome" : "Device border";
+      if (mode === "desktop") decorBtn.title = on ? "Browser" : "No border";
+      else decorBtn.title = on ? "Border" : "No border";
       decorBtn.innerHTML = '<i data-lucide="' + icon + '"></i>';
       renderIcons({ Square, SquareDashed, PanelTop });
     }
