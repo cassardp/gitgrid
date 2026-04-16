@@ -29,7 +29,7 @@ html:has(.landing), body:has(.landing) { background: var(--bg); overscroll-behav
 .landing-badge {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-4);
+  color: var(--text-3);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 6px 16px;

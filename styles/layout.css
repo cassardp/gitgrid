@@ -101,7 +101,7 @@
   background: none;
   padding: 6px 14px;
   border-radius: 20px;
-  border: 1px solid var(--text-4);
+  border: 1px solid var(--icon-border);
   text-decoration: none;
   transition: background 0.2s;
 }
