@@ -96,17 +96,15 @@
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.03em;
-  color: var(--text-3);
+  color: var(--text-2);
   background: none;
   padding: 6px 14px;
   border-radius: 20px;
-  border: 1px solid var(--icon-border);
+  border: 1px solid var(--text-3);
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: background 0.2s;
 }
 
 .footer-label:hover {
-  border-color: var(--text-3);
-  color: var(--text-2);
-  background: var(--bg);
+  background: var(--surface);
 }
