@@ -1,5 +1,5 @@
 /* Landing */
-html:has(.landing), body:has(.landing) { background: var(--bg); overscroll-behavior: none; }
+html:has(.landing), body:has(.landing) { background: #ffffff; overscroll-behavior: none; }
 
 .main.landing { max-width: 100%; padding: 0; }
 
