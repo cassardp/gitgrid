@@ -1,4 +1,4 @@
-import { createIcons, X, Upload, Image, Trash2, RotateCcw, EyeOff, Plus, Camera, Loader, PanelTop, Square, Settings2 } from "lucide";
+import { createIcons, ImagePlus, ImageOff, Trash2, RotateCcw, Globe, Camera, Loader, PanelTop, Square, SquareDashed, Smartphone, Monitor, Ellipsis } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -8,7 +8,6 @@ function renderIcons(icons) {
 let workingConfig = null;
 let saveTimer = null;
 var captureQueue = Promise.resolve();
-var skipAutoCapture = new Set();
 
 var MAX_SIZE = 1200;
 var QUALITY = 0.82;
@@ -309,7 +308,7 @@ function addCardToolbar(card, repo) {
   // Trigger button
   var trigger = document.createElement("button");
   trigger.className = "dev-card-trigger";
-  trigger.innerHTML = '<i data-lucide="settings-2"></i>';
+  trigger.innerHTML = '<i data-lucide="ellipsis"></i>';
   trigger.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
@@ -364,11 +363,55 @@ function addCardToolbar(card, repo) {
     });
     dropdown.appendChild(resetBtn);
 
+    var chromeImg = card.querySelector(".card-frame-img");
+    function isCardPortrait() {
+      if (rc.frameStyle === "phone") return true;
+      if (rc.frameStyle === "browser") return false;
+      if (card.classList.contains("card-frame-portrait")) return true;
+      if (card.classList.contains("card-frame-landscape")) return false;
+      if (chromeImg && chromeImg.naturalWidth) return chromeImg.naturalWidth < chromeImg.naturalHeight;
+      return false;
+    }
+
+    // Mode toggle (phone / desktop)
+    var modeBtn = document.createElement("button");
+    modeBtn.className = "dev-frame-btn";
+    modeBtn.title = "Frame mode";
+    function updateModeIcon() {
+      modeBtn.innerHTML = '<i data-lucide="' + (isCardPortrait() ? "monitor" : "smartphone") + '"></i>';
+      renderIcons({ Smartphone, Monitor });
+    }
+    updateModeIcon();
+    if (chromeImg && !chromeImg.complete) chromeImg.addEventListener("load", updateModeIcon, { once: true });
+    modeBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var nextMode = isCardPortrait() ? "browser" : "phone";
+      rc.frameStyle = nextMode;
+      card.dataset.frameStyle = nextMode;
+      card.classList.toggle("card-frame-portrait", nextMode === "phone");
+      card.classList.toggle("card-frame-landscape", nextMode === "browser");
+      updateModeIcon();
+      updateChromeIcon();
+      if (window.detectCardBrightness) window.detectCardBrightness(card);
+      debouncedSave();
+    });
+    dropdown.appendChild(modeBtn);
+
     // Chrome toggle
     var chromeBtn = document.createElement("button");
     chromeBtn.className = "dev-frame-btn dev-chrome-toggle" + (rc.showChrome ? " on" : "");
-    chromeBtn.title = "Browser frame";
-    chromeBtn.innerHTML = rc.showChrome ? '<i data-lucide="square"></i>' : '<i data-lucide="panel-top"></i>';
+    chromeBtn.title = "Frame style";
+    function updateChromeIcon() {
+      var portrait = isCardPortrait();
+      var icon;
+      if (portrait) icon = rc.showChrome ? "square" : "square-dashed";
+      else icon = rc.showChrome ? "square" : "panel-top";
+      chromeBtn.innerHTML = '<i data-lucide="' + icon + '"></i>';
+      renderIcons({ PanelTop, Square, SquareDashed });
+    }
+    updateChromeIcon();
+    if (chromeImg && !chromeImg.complete) chromeImg.addEventListener("load", updateChromeIcon, { once: true });
     chromeBtn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -376,8 +419,7 @@ function addCardToolbar(card, repo) {
       if (!rc.showChrome) delete rc.showChrome;
       card.classList.toggle("card-frame-show-chrome", !!rc.showChrome);
       chromeBtn.classList.toggle("on", !!rc.showChrome);
-      chromeBtn.innerHTML = rc.showChrome ? '<i data-lucide="square"></i>' : '<i data-lucide="panel-top"></i>';
-      renderIcons({ PanelTop, Square });
+      updateChromeIcon();
       debouncedSave();
     });
     dropdown.appendChild(chromeBtn);
@@ -393,7 +435,7 @@ function addCardToolbar(card, repo) {
     var deleteBtn = document.createElement("button");
     deleteBtn.className = "dev-frame-btn";
     deleteBtn.title = "Remove screenshot";
-    deleteBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+    deleteBtn.innerHTML = '<i data-lucide="image-off"></i>';
     deleteBtn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -402,16 +444,16 @@ function addCardToolbar(card, repo) {
     });
     dropdown.appendChild(deleteBtn);
   } else {
-    // Add screenshot
+    // Add screenshot — directly opens file picker
     var addBtn = document.createElement("button");
     addBtn.className = "dev-frame-btn";
-    addBtn.title = "Add screenshot";
-    addBtn.innerHTML = '<i data-lucide="plus"></i>';
+    addBtn.title = "Upload image";
+    addBtn.innerHTML = '<i data-lucide="image-plus"></i>';
     addBtn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       dropdown.classList.remove("open");
-      openImagePicker(card, repo);
+      triggerUpload(card, repo);
     });
     dropdown.appendChild(addBtn);
   }
@@ -420,7 +462,7 @@ function addCardToolbar(card, repo) {
   var hideBtn = document.createElement("button");
   hideBtn.className = "dev-frame-btn";
   hideBtn.title = "Hide repo";
-  hideBtn.innerHTML = '<i data-lucide="eye-off"></i>';
+  hideBtn.innerHTML = '<i data-lucide="trash-2"></i>';
   hideBtn.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
@@ -434,12 +476,20 @@ function addCardToolbar(card, repo) {
   menu.appendChild(dropdown);
   menu.addEventListener("click", function (e) { e.stopPropagation(); });
   card.appendChild(menu);
-  renderIcons({ Trash2, RotateCcw, EyeOff, Plus, PanelTop, Square, Settings2 });
+  renderIcons({ ImageOff, ImagePlus, Trash2, RotateCcw, PanelTop, Square, SquareDashed, Smartphone, Monitor, Ellipsis });
 }
 
 function applyImage(card, repo, imagePath) {
   const rc = getRC(repo.name);
   if (imagePath) {
+    var prevKey = rc.screenshot;
+    if (prevKey && prevKey !== imagePath) {
+      fetch("/api/images", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: prevKey }),
+      });
+    }
     rc.screenshot = imagePath;
     // Remove old background-image styles (backward compat)
     card.style.backgroundImage = "";
@@ -471,6 +521,8 @@ function applyImage(card, repo, imagePath) {
     if (rc.frameBg) card.style.setProperty("--frame-bg", rc.frameBg);
     card.style.setProperty("--frame-pos", rc.framePosition || "center");
     card.classList.remove("card-dark-bg");
+    if (rc.frameStyle) card.dataset.frameStyle = rc.frameStyle;
+    else delete card.dataset.frameStyle;
     if (window.detectFrameRadius) window.detectFrameRadius(card);
     const placeholder = card.querySelector(".dev-no-image");
     if (placeholder) placeholder.remove();
@@ -478,7 +530,6 @@ function applyImage(card, repo, imagePath) {
   } else {
     var oldKey = rc.screenshot;
     delete rc.screenshot;
-    skipAutoCapture.add(repo.name);
     // Delete from R2 + D1
     if (oldKey) {
       fetch("/api/images", {
@@ -499,38 +550,82 @@ function applyImage(card, repo, imagePath) {
   debouncedSave();
 }
 
+function triggerUpload(card, repo) {
+  var input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.addEventListener("change", async function () {
+    var file = input.files[0];
+    if (!file) return;
+    file = await optimizeImage(file);
+    var formData = new FormData();
+    formData.append("file", file);
+    formData.append("repo", repo.name);
+    var r = await fetch("/api/images", { method: "POST", body: formData });
+    var result = await r.json();
+    if (result.key) applyImage(card, repo, result.key);
+  });
+  input.click();
+}
+
+function triggerCapture(card, repo) {
+  var rc = getRC(repo.name);
+  rc.captureTried = true;
+  debouncedSave();
+  var existing = card.querySelector(".dev-no-image");
+  if (existing) existing.remove();
+  card.dataset.capturing = "1";
+  var label = document.createElement("div");
+  label.className = "dev-no-image dev-no-image-loading";
+  label.innerHTML = '<i data-lucide="loader"></i> Capturing\u2026';
+  card.appendChild(label);
+  renderIcons({ Loader });
+  var svg = label.querySelector("svg");
+  if (svg) svg.style.animation = "spin 1s linear infinite";
+  captureQueue = captureQueue.then(function () { return autoCapture(card, repo); });
+}
+
 function setupPlaceholder(card, repo) {
   var rc = getRC(repo.name);
   if (rc.screenshot) return;
   var existing = card.querySelector(".dev-no-image");
   if (existing) existing.remove();
 
-  // Auto-capture if repo has a homepage URL and no image yet (skip if manually removed)
   var hasHomepage = repo.homepage && /^https?:\/\//.test(repo.homepage);
-  if (hasHomepage && !card.dataset.capturing && !skipAutoCapture.has(repo.name)) {
-    card.dataset.capturing = "1";
-    var label = document.createElement("div");
-    label.className = "dev-no-image";
-    label.innerHTML = '<i data-lucide="loader"></i> Capturing\u2026';
-    card.appendChild(label);
-    renderIcons({ Loader });
-    var svg = label.querySelector("svg");
-    if (svg) svg.style.animation = "spin 1s linear infinite";
-    captureQueue = captureQueue.then(function() { return autoCapture(card, repo); });
+
+  // Auto-capture only on first discovery of this repo (never tried before)
+  if (hasHomepage && !rc.captureTried && !card.dataset.capturing) {
+    triggerCapture(card, repo);
     return;
   }
 
-  var btn = document.createElement("button");
-  btn.className = "dev-no-image";
-  if (card.classList.contains("card-dark-bg")) btn.classList.add("dev-no-image-light");
-  btn.innerHTML = `<i data-lucide="image"></i> Add screenshot`;
-  btn.addEventListener("click", function (e) {
+  var wrap = document.createElement("div");
+  wrap.className = "dev-no-image";
+
+  if (hasHomepage) {
+    var captureBtn = document.createElement("button");
+    captureBtn.className = "dev-no-image-btn";
+    captureBtn.innerHTML = '<i data-lucide="globe"></i><span>Fetch</span>';
+    captureBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      triggerCapture(card, repo);
+    });
+    wrap.appendChild(captureBtn);
+  }
+
+  var uploadBtn = document.createElement("button");
+  uploadBtn.className = "dev-no-image-btn";
+  uploadBtn.innerHTML = '<i data-lucide="camera"></i><span>Upload</span>';
+  uploadBtn.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
-    openImagePicker(card, repo);
+    triggerUpload(card, repo);
   });
-  card.appendChild(btn);
-  renderIcons({ Image });
+  wrap.appendChild(uploadBtn);
+
+  card.appendChild(wrap);
+  renderIcons({ Globe, Camera });
 }
 
 async function fetchCapture(repoName) {
@@ -563,159 +658,6 @@ async function autoCapture(card, repo) {
     delete card.dataset.capturing;
     setupPlaceholder(card, repo);
   }
-}
-
-async function openImagePicker(card, repo) {
-  const existing = document.querySelector(".picker-overlay");
-  if (existing) existing.remove();
-
-  const res = await fetch("/api/images");
-  const { images: imageList } = await res.json();
-  const rc = getRC(repo.name);
-  const current = rc.screenshot || "";
-  const images = imageList.map(img => img.r2_key);
-
-  const overlay = document.createElement("div");
-  overlay.className = "picker-overlay";
-
-  const grid = images.length
-    ? images.map(img => `
-        <div class="picker-item${img === current ? " selected" : ""}" data-path="${img}">
-          <img src="/img/${img}" alt="${img}">
-          <button class="picker-item-delete" data-path="${img}" title="Delete image"><i data-lucide="trash-2"></i></button>
-        </div>`).join("")
-    : `<div class="picker-empty"><i data-lucide="image"></i>No images yet</div>`;
-
-  const hasHomepage = repo.homepage && /^https?:\/\//.test(repo.homepage);
-
-  overlay.innerHTML = `
-    <div class="picker">
-      <div class="picker-header">
-        <span class="picker-title">Images</span>
-        <button class="picker-close"><i data-lucide="x"></i></button>
-      </div>
-      <div class="picker-grid">${grid}</div>
-      <div class="picker-actions">
-        <button class="picker-btn" id="picker-upload">
-          <i data-lucide="upload"></i> Upload
-        </button>
-        ${hasHomepage ? `<button class="picker-btn" id="picker-capture" title="${repo.homepage.replace(/[&"<>]/g, '')}">
-          <i data-lucide="camera"></i> Capture
-        </button>` : ''}
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-  requestAnimationFrame(() => overlay.classList.add("visible"));
-  renderIcons({ X, Upload, Trash2, Image, Camera });
-
-  const close = () => {
-    overlay.classList.remove("visible");
-    setTimeout(() => overlay.remove(), 200);
-  };
-
-  overlay.querySelector(".picker-close").addEventListener("click", close);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) close();
-  });
-
-  // Select an image
-  overlay.querySelectorAll(".picker-item").forEach(item => {
-    item.addEventListener("click", (e) => {
-      if (e.target.closest(".picker-item-delete")) return;
-      applyImage(card, repo, item.dataset.path);
-      close();
-    });
-  });
-
-  // Delete an image
-  overlay.querySelectorAll(".picker-item-delete").forEach(btn => {
-    btn.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      const imgPath = btn.dataset.path;
-      await fetch("/api/images", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: imgPath }),
-      });
-      // Remove from any card config that uses it
-      if (workingConfig.repos) {
-        for (const name of Object.keys(workingConfig.repos)) {
-          if (workingConfig.repos[name].screenshot === imgPath) {
-            delete workingConfig.repos[name].screenshot;
-            const c = document.querySelector(`[data-repo="${name}"]`);
-            if (c) {
-              var fr = c.querySelector(".card-frame");
-              if (fr) fr.remove();
-              var tb = c.querySelector(".dev-card-menu");
-              if (tb) tb.remove();
-              c.classList.remove("card-has-frame", "card-frame-landscape", "card-frame-portrait", "card-dark-bg");
-              c.style.removeProperty("--frame-bg");
-              c.style.backgroundImage = "";
-              if (!c.querySelector(".dev-no-image")) setupPlaceholder(c, { name });
-            }
-          }
-        }
-      }
-      debouncedSave();
-      btn.closest(".picker-item").remove();
-      if (!overlay.querySelector(".picker-item")) {
-        overlay.querySelector(".picker-grid").innerHTML = `<div class="picker-empty"><i data-lucide="image"></i>No images yet</div>`;
-      }
-    });
-  });
-
-  // Upload new image
-  document.getElementById("picker-upload").addEventListener("click", () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.addEventListener("change", async () => {
-      var file = input.files[0];
-      if (!file) return;
-      file = await optimizeImage(file);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("repo", repo.name);
-      const r = await fetch("/api/images", { method: "POST", body: formData });
-      const result = await r.json();
-      if (result.key) {
-        applyImage(card, repo, result.key);
-        close();
-      }
-    });
-    input.click();
-  });
-
-  // Capture screenshot from homepage URL
-  const captureBtn = document.getElementById("picker-capture");
-  if (captureBtn) {
-    captureBtn.addEventListener("click", async () => {
-      captureBtn.disabled = true;
-      captureBtn.innerHTML = '<i data-lucide="loader"></i> Capturing\u2026';
-      renderIcons({ Loader });
-      // Spin the loader icon
-      const loaderSvg = captureBtn.querySelector("svg");
-      if (loaderSvg) loaderSvg.style.animation = "spin 1s linear infinite";
-      try {
-        var result = await fetchCapture(repo.name);
-        if (result && result.key) {
-          applyImage(card, repo, result.key);
-          close();
-        } else {
-          captureBtn.innerHTML = '<i data-lucide="camera"></i> Failed';
-          renderIcons({ Camera });
-          captureBtn.disabled = false;
-        }
-      } catch {
-        captureBtn.innerHTML = '<i data-lucide="camera"></i> Failed';
-        renderIcons({ Camera });
-        captureBtn.disabled = false;
-      }
-    });
-  }
-
 }
 
 function setupCardToolbar(card, repo) {

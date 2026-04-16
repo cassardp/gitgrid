@@ -22,7 +22,7 @@
 .modal-privacy ul { padding-left: 18px; }
 .modal-privacy li { margin-bottom: 4px; }
 .modal-privacy a { color: var(--text); }
-.modal-privacy code { font-size: 13px; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+.modal-privacy code { font-size: 13px; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
 
 .setting-section {
   padding-bottom: 20px;
@@ -73,7 +73,7 @@
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid var(--icon-border);
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
   font-size: 14px;
   font-family: inherit;
@@ -110,7 +110,7 @@
 
 .setting-align-btn svg { width: 16px; height: 16px; }
 .setting-align-btn:hover { border-color: var(--text-3); color: var(--text-2); }
-.setting-align-btn.on { border-color: var(--text-3); background: var(--bg); color: var(--text); }
+.setting-align-btn.on { border-color: var(--text-3); background: var(--surface); color: var(--text); }
 
 .setting-toggle {
   position: relative;

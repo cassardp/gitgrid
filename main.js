@@ -50,6 +50,12 @@ function hasExternalLink(repo) {
 
 
 function detectFrameRadius(card) {
+  var forced = card.dataset.frameStyle;
+  if (forced) {
+    card.classList.toggle("card-frame-portrait", forced === "phone");
+    card.classList.toggle("card-frame-landscape", forced === "browser");
+    return;
+  }
   var img = card.querySelector(".card-frame-img");
   if (!img) return;
   function apply() {
@@ -262,7 +268,7 @@ function renderCard(repo, index) {
     ? `<span class="card-meta-item">${escapeHTML(repo.language)}</span>` : "";
 
   const stars = repo.stargazers_count > 0 && CONFIG.showStars !== false
-    ? `<span class="card-top-badge"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
+    ? `<span class="card-stars"><i data-lucide="star" fill="currentColor"></i> ${repo.stargazers_count.toLocaleString()}</span>` : "";
 
   const hasScreenshot = rc.screenshot && /^[\w.\/-]+$/.test(rc.screenshot);
   var frameHTML = "";
@@ -272,6 +278,8 @@ function renderCard(repo, index) {
   if (hasScreenshot) {
     cardClasses += " card-has-frame";
     if (rc.showChrome) cardClasses += " card-frame-show-chrome";
+    if (rc.frameStyle === "phone") cardClasses += " card-frame-portrait";
+    else if (rc.frameStyle === "browser") cardClasses += " card-frame-landscape";
 
     var frameBg = rc.frameBg || "var(--surface)";
     var framePos = rc.framePosition || "center";
@@ -285,22 +293,24 @@ function renderCard(repo, index) {
     var hostname = new URL(repo.homepage).hostname.replace(/^www\./, "");
     var label = repo.homepage.includes("apps.apple.com") || repo.homepage.includes("play.google.com") ? "App"
       : hostname.charAt(0).toUpperCase() + hostname.slice(1);
-    linkBadge = `<span class="card-price">${escapeHTML(label)} <i data-lucide="arrow-up-right"></i></span>`;
+    linkBadge = `<span class="card-link">${escapeHTML(label)} <i data-lucide="arrow-up-right"></i></span>`;
   }
+
+  var frameStyleAttr = rc.frameStyle ? ` data-frame-style="${escapeHTML(rc.frameStyle)}"` : "";
 
   return `
     <a class="${cardClasses}"
        href="${escapeHTML(link)}" target="_blank" rel="noopener"
-       data-repo="${escapeHTML(repo.name)}"
+       data-repo="${escapeHTML(repo.name)}"${frameStyleAttr}
        style="${inlineStyle}">
-      ${stars}
+      ${linkBadge}
       ${frameHTML}
 
-      ${CONFIG.showTitle !== false || lang || linkBadge ? `<div class="card-footer">
+      ${CONFIG.showTitle !== false || lang || stars ? `<div class="card-footer">
         ${lang}
-        ${CONFIG.showTitle !== false || linkBadge ? `<div class="card-title-row">
+        ${CONFIG.showTitle !== false || stars ? `<div class="card-title-row">
           ${CONFIG.showTitle !== false ? `<span class="card-title">${escapeHTML(repo.name)}</span>` : ""}
-          ${linkBadge}
+          ${stars}
         </div>` : ""}
       </div>` : ""}
     </a>`;
@@ -535,7 +545,7 @@ function openSettings() {
 
       <details class="setting-section setting-danger">
         <summary class="setting-danger-summary">
-          <span class="setting-section-title">Delete account</span>
+          <span class="setting-section-title">Danger zone</span>
           <svg class="setting-danger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </summary>
         <div class="setting-danger-content">

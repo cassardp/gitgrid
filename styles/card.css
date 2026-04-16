@@ -53,7 +53,8 @@
   text-transform: capitalize;
 }
 
-.card-price {
+/* Stars — bottom right (in title row) */
+.card-stars {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -63,22 +64,10 @@
   white-space: nowrap;
   margin-left: auto;
 }
+.card-stars svg { width: 15px; height: 15px; opacity: 0.6; }
 
-.card-price svg { width: 15px; height: 15px; opacity: 0.6; }
-
-/* Light background image — soften dark text */
-.card[style*="background-image"]:not(.card-dark-bg) .card-title { opacity: 0.85; }
-.card[style*="background-image"]:not(.card-dark-bg) .card-meta-item { opacity: 0.7; }
-.card[style*="background-image"]:not(.card-dark-bg) .card-price { opacity: 0.75; }
-
-/* Dark background image — light text */
-.card-dark-bg .card-title { color: var(--surface); }
-.card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 75%, transparent); }
-.card-dark-bg .card-price { color: color-mix(in srgb, var(--surface) 85%, transparent); }
-.card-dark-bg .card-price svg { opacity: 0.8; }
-
-/* Stars badge — top right */
-.card-top-badge {
+/* Link badge — top right */
+.card-link {
   position: absolute;
   top: 24px;
   right: 24px;
@@ -86,15 +75,26 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-2);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.card-top-badge svg { width: 14px; height: 14px; opacity: 0.6; }
-.card-dark-bg .card-top-badge { color: color-mix(in srgb, var(--surface) 75%, transparent); }
-.card-has-frame .card-top-badge { color: var(--text-2); opacity: 0.7; }
-.card-has-frame.card-dark-bg .card-top-badge { color: color-mix(in srgb, var(--surface) 75%, transparent); }
+.card-link svg { width: 15px; height: 15px; opacity: 0.6; }
+
+/* Light background image — soften dark text */
+.card[style*="background-image"]:not(.card-dark-bg) .card-title { opacity: 0.85; }
+.card[style*="background-image"]:not(.card-dark-bg) .card-meta-item { opacity: 0.7; }
+.card[style*="background-image"]:not(.card-dark-bg) .card-stars { opacity: 0.75; }
+.card[style*="background-image"]:not(.card-dark-bg) .card-link { opacity: 0.75; }
+
+/* Dark background image — light text */
+.card-dark-bg .card-title { color: var(--surface); }
+.card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 75%, transparent); }
+.card-dark-bg .card-stars { color: color-mix(in srgb, var(--surface) 85%, transparent); }
+.card-dark-bg .card-stars svg { opacity: 0.8; }
+.card-dark-bg .card-link { color: color-mix(in srgb, var(--surface) 85%, transparent); }
+.card-dark-bg .card-link svg { opacity: 0.8; }
 
 /* Screenshot frame */
 .card-has-frame { background: var(--frame-bg, var(--surface)); }
@@ -197,8 +197,10 @@
 /* Text on solid bg */
 .card-has-frame .card-title { color: var(--text); opacity: 1; }
 .card-has-frame .card-meta-item { color: var(--text-2); opacity: 1; }
-.card-has-frame .card-price { color: var(--text-2); opacity: 1; }
+.card-has-frame .card-stars { color: var(--text-2); opacity: 1; }
+.card-has-frame .card-link { color: var(--text-2); opacity: 0.7; }
 /* Dark frame bg — light text overrides */
 .card-has-frame.card-dark-bg .card-title { color: var(--surface); }
 .card-has-frame.card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 75%, transparent); }
-.card-has-frame.card-dark-bg .card-price { color: color-mix(in srgb, var(--surface) 85%, transparent); }
+.card-has-frame.card-dark-bg .card-stars { color: color-mix(in srgb, var(--surface) 85%, transparent); }
+.card-has-frame.card-dark-bg .card-link { color: color-mix(in srgb, var(--surface) 75%, transparent); }
