@@ -769,7 +769,7 @@ async function init() {
     document.getElementById("content").innerHTML = `
       <div class="landing-content">
         <div class="landing-top">
-          <p class="landing-badge">GitHub → Portfolio · 10s</p>
+          <p class="landing-badge">GitHub → Portfolio</p>
           <h1 class="landing-title">GitGrid</h1>
           <p class="landing-tagline">Your GitHub repos, beautifully displayed.<br>Metadata only.</p>
           <a href="/api/auth/login" class="landing-cta">
