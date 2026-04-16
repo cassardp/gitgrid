@@ -1,4 +1,4 @@
-import { createIcons, ImagePlus, ImageOff, Trash2, RotateCcw, Globe, Camera, Loader, PanelTop, Square, SquareDashed, Smartphone, Monitor, Ellipsis } from "lucide";
+import { createIcons, ImagePlus, ImageOff, Trash2, RotateCcw, Globe, Loader, PanelTop, Square, SquareDashed, Smartphone, Monitor, Ellipsis } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -424,13 +424,6 @@ function addCardToolbar(card, repo) {
     });
     dropdown.appendChild(chromeBtn);
 
-    // Separator
-    var sep1 = document.createElement("div");
-    sep1.className = "dev-frame-sep";
-    dropdown.appendChild(sep1);
-  }
-
-  if (hasScreenshot) {
     // Remove screenshot
     var deleteBtn = document.createElement("button");
     deleteBtn.className = "dev-frame-btn";
@@ -444,7 +437,22 @@ function addCardToolbar(card, repo) {
     });
     dropdown.appendChild(deleteBtn);
   } else {
-    // Add screenshot — directly opens file picker
+    // Fetch from homepage (only if repo has a URL)
+    if (repo.homepage && /^https?:\/\//.test(repo.homepage)) {
+      var fetchBtn = document.createElement("button");
+      fetchBtn.className = "dev-frame-btn";
+      fetchBtn.title = "Fetch from website";
+      fetchBtn.innerHTML = '<i data-lucide="globe"></i>';
+      fetchBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropdown.classList.remove("open");
+        triggerCapture(card, repo);
+      });
+      dropdown.appendChild(fetchBtn);
+    }
+
+    // Upload — directly opens file picker
     var addBtn = document.createElement("button");
     addBtn.className = "dev-frame-btn";
     addBtn.title = "Upload image";
@@ -457,6 +465,11 @@ function addCardToolbar(card, repo) {
     });
     dropdown.appendChild(addBtn);
   }
+
+  // Separator before hide (visually isolates the destructive action)
+  var sep = document.createElement("div");
+  sep.className = "dev-frame-sep";
+  dropdown.appendChild(sep);
 
   // Hide repo
   var hideBtn = document.createElement("button");
@@ -476,7 +489,7 @@ function addCardToolbar(card, repo) {
   menu.appendChild(dropdown);
   menu.addEventListener("click", function (e) { e.stopPropagation(); });
   card.appendChild(menu);
-  renderIcons({ ImageOff, ImagePlus, Trash2, RotateCcw, PanelTop, Square, SquareDashed, Smartphone, Monitor, Ellipsis });
+  renderIcons({ ImageOff, ImagePlus, Globe, Trash2, RotateCcw, PanelTop, Square, SquareDashed, Smartphone, Monitor, Ellipsis });
 }
 
 function applyImage(card, repo, imagePath) {
@@ -616,7 +629,7 @@ function setupPlaceholder(card, repo) {
 
   var uploadBtn = document.createElement("button");
   uploadBtn.className = "dev-no-image-btn";
-  uploadBtn.innerHTML = '<i data-lucide="camera"></i><span>Upload</span>';
+  uploadBtn.innerHTML = '<i data-lucide="image-plus"></i><span>Upload</span>';
   uploadBtn.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
@@ -625,7 +638,7 @@ function setupPlaceholder(card, repo) {
   wrap.appendChild(uploadBtn);
 
   card.appendChild(wrap);
-  renderIcons({ Globe, Camera });
+  renderIcons({ Globe, ImagePlus });
 }
 
 async function fetchCapture(repoName) {
