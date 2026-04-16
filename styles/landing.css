@@ -211,7 +211,7 @@ html:has(.landing), body:has(.landing) { background: var(--bg); overscroll-behav
 @media (max-width: 680px) {
   .landing-content { padding: 80px 20px 48px; }
   .landing-title { font-size: 48px; }
-  .landing-tagline { font-size: 17px; max-width: 300px; }
+  .landing-tagline { font-size: 17px; }
   .landing-badge { font-size: 11px; }
   .landing-top { margin-bottom: 40px; }
   .landing-cta { padding: 16px 32px; font-size: 14px; }
