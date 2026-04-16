@@ -32,7 +32,7 @@
 
 .card-meta-item {
   font-size: 15px;
-  color: var(--text-2);
+  color: var(--text-4);
   font-weight: 400;
   font-variant: small-caps;
   text-transform: lowercase;
@@ -49,7 +49,7 @@
 .card-title {
   font-size: 16px;
   font-weight: 600;
-  color: color-mix(in srgb, var(--text) 85%, transparent);
+  color: var(--text);
   text-transform: capitalize;
 }
 
@@ -59,12 +59,12 @@
   align-items: center;
   gap: 4px;
   font-size: 14px;
-  color: var(--text-2);
+  color: var(--text-4);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   margin-left: auto;
 }
-.card-stars svg { width: 15px; height: 15px; opacity: 0.6; }
+.card-stars svg { width: 15px; height: 15px; }
 
 /* Link badge — top right */
 .card-link {
@@ -76,11 +76,11 @@
   align-items: center;
   gap: 4px;
   font-size: 14px;
-  color: var(--text-2);
+  color: var(--text-3);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.card-link svg { width: 15px; height: 15px; opacity: 0.6; }
+.card-link svg { width: 15px; height: 15px; }
 
 /* Light background image — soften dark text */
 .card[style*="background-image"]:not(.card-dark-bg) .card-title { opacity: 0.85; }
@@ -89,12 +89,10 @@
 .card[style*="background-image"]:not(.card-dark-bg) .card-link { opacity: 0.75; }
 
 /* Dark background image — light text */
-.card-dark-bg .card-title { color: color-mix(in srgb, var(--surface) 85%, transparent); }
-.card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 75%, transparent); }
-.card-dark-bg .card-stars { color: color-mix(in srgb, var(--surface) 85%, transparent); }
-.card-dark-bg .card-stars svg { opacity: 0.8; }
-.card-dark-bg .card-link { color: color-mix(in srgb, var(--surface) 85%, transparent); }
-.card-dark-bg .card-link svg { opacity: 0.8; }
+.card-dark-bg .card-title { color: color-mix(in srgb, var(--surface) 95%, transparent); }
+.card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 70%, transparent); }
+.card-dark-bg .card-stars { color: color-mix(in srgb, var(--surface) 75%, transparent); }
+.card-dark-bg .card-link { color: color-mix(in srgb, var(--surface) 80%, transparent); }
 
 /* Screenshot frame */
 .card-has-frame { background: var(--frame-bg, var(--surface)); }
@@ -189,7 +187,7 @@
   background: var(--bg);
   border-radius: 5px;
   font-size: 10px;
-  color: var(--text-3);
+  color: var(--text-4);
   letter-spacing: 0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -216,12 +214,12 @@
 }
 .card-has-frame .card-footer { position: relative; z-index: 1; }
 /* Text on solid bg */
-.card-has-frame .card-title { color: color-mix(in srgb, var(--text) 85%, transparent); opacity: 1; }
-.card-has-frame .card-meta-item { color: var(--text-2); opacity: 1; }
-.card-has-frame .card-stars { color: var(--text-2); opacity: 1; }
-.card-has-frame .card-link { color: var(--text-2); opacity: 0.7; }
+.card-has-frame .card-title { color: var(--text); }
+.card-has-frame .card-meta-item { color: var(--text-4); }
+.card-has-frame .card-stars { color: var(--text-4); }
+.card-has-frame .card-link { color: var(--text-3); }
 /* Dark frame bg — light text overrides */
-.card-has-frame.card-dark-bg .card-title { color: color-mix(in srgb, var(--surface) 85%, transparent); }
-.card-has-frame.card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 75%, transparent); }
-.card-has-frame.card-dark-bg .card-stars { color: color-mix(in srgb, var(--surface) 85%, transparent); }
-.card-has-frame.card-dark-bg .card-link { color: color-mix(in srgb, var(--surface) 75%, transparent); }
+.card-has-frame.card-dark-bg .card-title { color: color-mix(in srgb, var(--surface) 95%, transparent); }
+.card-has-frame.card-dark-bg .card-meta-item { color: color-mix(in srgb, var(--surface) 70%, transparent); }
+.card-has-frame.card-dark-bg .card-stars { color: color-mix(in srgb, var(--surface) 75%, transparent); }
+.card-has-frame.card-dark-bg .card-link { color: color-mix(in srgb, var(--surface) 80%, transparent); }

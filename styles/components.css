@@ -75,7 +75,7 @@
   border-radius: 10px;
   border: 1px solid var(--icon-border);
   background: none;
-  color: var(--text-3);
+  color: var(--text-4);
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s, color 0.2s;
   text-decoration: none;
@@ -84,7 +84,7 @@
 .icon-btn svg { width: 17px; height: 17px; }
 
 .icon-btn:hover {
-  border-color: var(--text-3);
+  border-color: var(--text-4);
   background: var(--surface);
   color: var(--text-2);
 }
@@ -112,7 +112,7 @@
   padding: 0 14px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-3);
+  color: var(--text-4);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -135,12 +135,12 @@
   transition: box-shadow 0.15s;
 }
 
-.hidden-item:hover { box-shadow: 0 0 0 1px var(--text-3); }
+.hidden-item:hover { box-shadow: 0 0 0 1px var(--text-4); }
 
 .hidden-item-icon {
   width: 0;
   height: 14px;
-  color: var(--text-3);
+  color: var(--text-4);
   opacity: 0;
   overflow: hidden;
   flex-shrink: 0;
@@ -149,7 +149,7 @@
 
 .hidden-item:hover .hidden-item-icon { width: 14px; opacity: 1; }
 
-.hidden-item-name { color: var(--text-2); font-weight: 500; }
+.hidden-item-name { color: var(--text-3); font-weight: 500; }
 
 /* Loading */
 .loading {
@@ -157,7 +157,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  color: var(--text-3);
+  color: var(--text-4);
 }
 
 .loading-dot {
@@ -165,7 +165,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--text-3);
+  background: var(--text-4);
   margin: 0 3px;
   animation: pulse 1.2s ease infinite;
 }
@@ -185,12 +185,12 @@
   align-items: center;
   justify-content: center;
   min-height: 80vh;
-  color: var(--text-2);
+  color: var(--text-3);
   font-size: 15px;
   gap: 16px;
 }
 
-.error a { color: var(--text-3); text-decoration: none; font-size: 13px; }
+.error a { color: var(--text-4); text-decoration: none; font-size: 13px; }
 .error a:hover { color: var(--text); }
 
 /* Modal overlay */
@@ -230,7 +230,7 @@
   border-radius: 8px;
   border: none;
   background: none;
-  color: var(--text-3);
+  color: var(--text-4);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }

@@ -95,6 +95,7 @@ function setupDrag(card, repo) {
 
   // File drop support (external image files only)
   card.addEventListener("dragover", function (e) {
+    if (dragState) return;
     if (e.dataTransfer && e.dataTransfer.types.indexOf("Files") !== -1) {
       e.preventDefault();
       e.dataTransfer.dropEffect = "copy";
@@ -102,6 +103,7 @@ function setupDrag(card, repo) {
   });
 
   card.addEventListener("drop", function (e) {
+    if (dragState) return;
     if (!e.dataTransfer || !e.dataTransfer.files.length) return;
     var file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("image/")) {
