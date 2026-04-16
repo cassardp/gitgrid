@@ -11,7 +11,8 @@ Turn your GitHub repos into a clean portfolio. Log in with GitHub, and your repo
 - **Auto-sync** — Pulls your repos and profile from GitHub (public + private)
 - **Drag & drop** — Reorder cards visually
 - **Screenshots** — Upload images or auto-capture from homepage URLs (Cloudflare Browser Rendering)
-- **Screenshot frames** — Portrait (phone) and landscape (browser) frames with customizable colors
+- **Screenshot frames** — Portrait (phone) and landscape (browser) frames with customizable colors; per-card toggle for browser chrome (address bar + dots) and phone border
+- **Card dropdown menu** — Per-card settings menu (frame type, colors, chrome toggle) accessible via a top-left dropdown in edit mode
 - **Settings** — Title, bio, social links, footer, alignment — all editable in-app
 - **Hidden repos** — Hide any repo from your public portfolio
 - **Public pages** — Visitors see your portfolio with zero GitHub API calls (served from cache)
@@ -20,6 +21,7 @@ Turn your GitHub repos into a clean portfolio. Log in with GitHub, and your repo
 - **Visit stats** — Daily/weekly visit counter shown to the portfolio owner
 - **Social links** — GitHub, Twitter, blog, email, and Buy Me a Coffee
 - **Show/hide card titles** — Toggle card titles from settings
+- **Show/hide link badge** — Toggle the external link badge on cards from settings
 - **Privacy policy** — Accessible directly from the settings modal
 - **SEO** — robots.txt, dynamic sitemap (`/sitemap.xml`), and JSON-LD structured data per portfolio
 
