@@ -16,8 +16,8 @@
 .page-title[style*="right"] { align-items: flex-end; }
 
 .title {
-  font-size: 48px;
-  font-weight: 600;
+  font-size: 44px;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
