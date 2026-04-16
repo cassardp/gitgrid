@@ -6,7 +6,7 @@
   #dev-palette { bottom: 16px; }
   #stats-overlay { bottom: 67px; font-size: 12px; }
   .page-title { padding: 24px 16px 32px; }
-  .title { font-size: 28px; }
+  .title { font-size: 32px; }
   .main { padding: 0 16px 80px; }
   .grid { grid-template-columns: 1fr; gap: 16px; }
   .card-footer { padding: 0 20px 18px; }
