@@ -61,33 +61,58 @@ html:has(.landing), body:has(.landing) { background: var(--bg); overscroll-behav
 }
 
 .landing-cta {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
   padding: 14px 32px;
   margin-top: 8px;
-  background: #0a0a0a;
+  background: linear-gradient(to bottom, #2a2a2a, #0a0a0a);
   color: #fafafa;
   border-radius: 100px;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 15px;
   letter-spacing: -0.01em;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   opacity: 0;
   animation: landing-fade-up 0.8s ease-out 0.5s forwards;
 }
 
+.landing-cta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
+}
+
+.landing-cta-label-hover {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  transform: translateY(100%);
+}
+
 .landing-cta svg { width: 18px; height: 18px; }
 
 .landing-cta:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(to bottom, #3a3a3a, #1a1a1a);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.landing-cta:hover .landing-cta-label:not(.landing-cta-label-hover) {
+  transform: translateY(-100%);
+  opacity: 0;
+  filter: blur(6px);
+}
+
+.landing-cta:hover .landing-cta-label-hover {
+  transform: translateY(0);
 }
 
 .landing-cta:active {
-  transform: translateY(0) scale(0.98);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 

@@ -772,7 +772,10 @@ async function init() {
           <p class="landing-badge">GitHub → Portfolio · 10s</p>
           <h1 class="landing-title">GitGrid</h1>
           <p class="landing-tagline">Your GitHub repos, beautifully displayed.<br>Metadata only.</p>
-          <a href="/api/auth/login" class="landing-cta"><i data-lucide="github"></i>Sign in with GitHub</a>
+          <a href="/api/auth/login" class="landing-cta">
+            <span class="landing-cta-label"><i data-lucide="github"></i>Sign in with GitHub</span>
+            <span class="landing-cta-label landing-cta-label-hover"><i data-lucide="arrow-up-right"></i>Sign in with GitHub</span>
+          </a>
           <a href="/cassardp" class="landing-demo" target="_blank" rel="noopener noreferrer">See a live portfolio <span>&rarr;</span></a>
         </div>
         <a href="/cassardp" class="landing-hero-link" target="_blank" rel="noopener noreferrer">
