@@ -17,7 +17,7 @@ html, body { scrollbar-width: none; }
 html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 
 body {
-  font-family: "Geist", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: ui-rounded, "SF Pro Rounded", "Geist", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
