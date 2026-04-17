@@ -31,7 +31,7 @@ Turn your GitHub repos into a clean portfolio. Log in with GitHub, and your repo
 - **Backend** — Cloudflare Workers + D1 (SQLite) + R2 (images) + Browser Rendering
 - **Auth** — GitHub App OAuth with HMAC-SHA256 sessions
 - **Icons** — Lucide
-- **Font** — Geist
+- **Font** — SF Pro Rounded (Apple) / Geist (others)
 
 ## Project structure
 
