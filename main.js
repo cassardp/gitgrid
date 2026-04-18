@@ -1,5 +1,15 @@
 import { createIcons, Star, Github, RefreshCw, Globe, Twitter, Settings2, X, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff, Code, Image, Mail, Plus, Coffee, ArrowLeft, ArrowUpRight } from "lucide";
 
+function resolveImgSrc(key) {
+  if (!key) return "";
+  if (window.__gitgridMock) {
+    const data = window.__gitgridMock.resolveImg(key);
+    if (data) return data;
+  }
+  return "/img/" + key;
+}
+window.resolveImgSrc = resolveImgSrc;
+
 let cachedData = null;
 let cachedViews = null;
 let CONFIG = {};
@@ -213,7 +223,7 @@ function renderHeader(user) {
   const socialRow = socialHTML ? `<div class="social-links">${socialHTML}</div>` : "";
 
   const avatar = user.avatar_url
-    ? `<img class="avatar" src="${escapeHTML(user.avatar_url + '&s=192')}" alt="${escapeHTML(user.login)}" width="96" height="96">` : "";
+    ? `<img class="avatar" src="${escapeHTML(user.avatar_url + (user.avatar_url.startsWith('data:') ? '' : '&s=192'))}" alt="${escapeHTML(user.login)}" width="96" height="96">` : "";
 
   const pageTitle = document.getElementById("page-title");
   pageTitle.innerHTML = `
@@ -302,7 +312,7 @@ function renderCard(repo, index) {
     var framePos = rc.framePosition || "center";
     inlineStyle += `--frame-bg:${escapeHTML(frameBg)};--frame-pos:${escapeHTML(framePos)};`;
     var chromeAddr = repo.homepage && !repo.homepage.includes("github.com") ? new URL(repo.homepage).hostname.replace(/^www\./, "") : repo.name;
-    frameHTML = `<div class="card-frame"><div class="card-frame-device"><div class="card-frame-chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-address">${escapeHTML(chromeAddr)}</span></div><img class="card-frame-img" src="/img/${escapeHTML(rc.screenshot)}" alt=""></div></div>`;
+    frameHTML = `<div class="card-frame"><div class="card-frame-device"><div class="card-frame-chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-address">${escapeHTML(chromeAddr)}</span></div><img class="card-frame-img" src="${escapeHTML(resolveImgSrc(rc.screenshot))}" alt=""></div></div>`;
   }
 
   var linkBadge = "";
@@ -364,24 +374,23 @@ function renderHiddenSection(repos) {
   var section = document.createElement("div");
   section.className = "hidden-section";
   section.innerHTML = `
-    <span class="hidden-section-title">Hidden repos</span>
+    <h2 class="section-title">Hidden repos · Only visible to you</h2>
     <div class="hidden-list">
       ${hidden.map(function (r) {
         return `
-          <div class="hidden-item" data-repo="${escapeHTML(r.name)}">
-            <i data-lucide="plus" class="hidden-item-icon"></i>
-            <span class="hidden-item-name">${escapeHTML(r.name)}</span>
+          <div class="hidden-row" data-repo="${escapeHTML(r.name)}">
+            <span class="hidden-row-name">${escapeHTML(r.name)}</span>
+            <button class="hidden-row-action" type="button">Unhide</button>
           </div>`;
       }).join("")}
     </div>
   `;
-  var list = section.querySelector(".hidden-list");
-  list.style.justifyContent = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
-  document.getElementById("footer-actions").insertAdjacentElement("afterend", section);
+  section.style.textAlign = CONFIG.footerAlign || "center";
+  document.getElementById("footer-actions").insertAdjacentElement("beforebegin", section);
 
-  section.querySelectorAll(".hidden-item").forEach(function (item) {
-    item.addEventListener("click", async function () {
-      var name = item.dataset.repo;
+  section.querySelectorAll(".hidden-row").forEach(function (row) {
+    row.addEventListener("click", async function () {
+      var name = row.dataset.repo;
       if (!CONFIG.repos) CONFIG.repos = {};
       if (!CONFIG.repos[name]) CONFIG.repos[name] = {};
       CONFIG.repos[name].hidden = false;
@@ -760,6 +769,12 @@ function getUsername() {
 }
 
 async function init() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("mock")) {
+    const { installMock } = await import("./mock.js");
+    if (!installMock()) return;
+  }
+
   const username = getUsername();
 
   if (!username) {

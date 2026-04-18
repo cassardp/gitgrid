@@ -78,11 +78,9 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding-top: 48px;
-  padding-bottom: 90px;
+  padding-top: 50px;
+  padding-bottom: 100px;
 }
-
-.footer-actions.has-hidden { padding-bottom: 0; }
 
 .footer-text {
   font-size: 14px;

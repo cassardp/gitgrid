@@ -1,5 +1,6 @@
 @media (max-width: 1100px) {
   .grid { grid-template-columns: repeat(2, 1fr); }
+  .hidden-list { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 680px) {
@@ -9,6 +10,7 @@
   .title { font-size: 30px; }
   .main { padding: 0 16px 80px; }
   .grid { grid-template-columns: 1fr; gap: 16px; }
+  .hidden-list { grid-template-columns: 1fr; gap: 10px; }
   .card-footer { padding: 0 20px 18px; }
   .card-frame { padding: 16px; }
   .avatar { width: 80px; height: 80px; margin-bottom: 16px; }

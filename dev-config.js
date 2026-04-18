@@ -1,4 +1,4 @@
-import { createIcons, ImagePlus, ImageOff, Trash2, RotateCcw, Globe, Loader, Smartphone, Tablet, Monitor, Square, SquareDashed, PanelTop, Ellipsis } from "lucide";
+import { createIcons, ImagePlus, ImageOff, EyeOff, RotateCcw, Globe, Loader, Smartphone, Tablet, Monitor, Square, SquareDashed, PanelTop, Ellipsis } from "lucide";
 
 function renderIcons(icons) {
   createIcons({ icons, nameAttr: "data-lucide" });
@@ -496,7 +496,7 @@ function addCardToolbar(card, repo) {
   var hideBtn = document.createElement("button");
   hideBtn.className = "dev-frame-btn";
   hideBtn.title = "Hide repo";
-  hideBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+  hideBtn.innerHTML = '<i data-lucide="eye-off"></i>';
   hideBtn.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
@@ -510,7 +510,7 @@ function addCardToolbar(card, repo) {
   menu.appendChild(dropdown);
   menu.addEventListener("click", function (e) { e.stopPropagation(); });
   card.appendChild(menu);
-  renderIcons({ ImageOff, ImagePlus, Globe, Trash2, RotateCcw, Smartphone, Tablet, Monitor, Square, SquareDashed, PanelTop, Ellipsis });
+  renderIcons({ ImageOff, ImagePlus, Globe, EyeOff, RotateCcw, Smartphone, Tablet, Monitor, Square, SquareDashed, PanelTop, Ellipsis });
 }
 
 function applyImage(card, repo, imagePath) {
@@ -544,7 +544,7 @@ function applyImage(card, repo, imagePath) {
     deviceDiv.appendChild(chrome);
     var img = document.createElement("img");
     img.className = "card-frame-img";
-    img.src = "/img/" + imagePath;
+    img.src = window.resolveImgSrc ? window.resolveImgSrc(imagePath) : "/img/" + imagePath;
     img.alt = "";
     deviceDiv.appendChild(img);
     frameDiv.appendChild(deviceDiv);
