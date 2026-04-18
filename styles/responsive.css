@@ -5,7 +5,6 @@
 
 @media (max-width: 680px) {
   #dev-palette { bottom: 16px; }
-  #stats-overlay { bottom: 67px; font-size: 12px; }
   .page-title { padding: 24px 16px 32px; }
   .title { font-size: 30px; }
   .main { padding: 0 16px 80px; }

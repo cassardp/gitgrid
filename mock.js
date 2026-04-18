@@ -1,12 +1,12 @@
 // Mock mode — activates with ?mock in URL
 // Simulates a logged-in GitHub user with fake repos, persists edits to localStorage.
-// Usage: /cassardp?mock  (reset with ?mock=reset)
+// Usage: /mayarivera?mock  (reset with ?mock=reset)
 
 const LS_KEY = "gitgrid-mock-v1";
 
 const MOCK_USER = {
-  login: "cassardp",
-  name: "Patrice Cassard",
+  login: "mayarivera",
+  name: "Maya Rivera",
   bio: "Indie maker. Ships small, useful tools. Currently building GitGrid.",
   avatar_url: "data:image/svg+xml;utf8," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
@@ -14,12 +14,12 @@ const MOCK_USER = {
         <stop offset="0" stop-color="#d4d4d8"/><stop offset="1" stop-color="#71717a"/>
       </linearGradient></defs>
       <rect width="96" height="96" fill="url(#g)"/>
-      <text x="50%" y="57%" text-anchor="middle" font-family="Geist,Inter,sans-serif" font-weight="500" font-size="38" fill="#fafafa">P</text>
+      <text x="50%" y="57%" text-anchor="middle" font-family="Geist,Inter,sans-serif" font-weight="500" font-size="38" fill="#fafafa">M</text>
     </svg>`
   ),
-  html_url: "https://github.com/cassardp",
-  twitter_username: "patricecassard",
-  blog: "cassardp.com",
+  html_url: "https://github.com/mayarivera",
+  twitter_username: "mayarivera",
+  blog: "mayarivera.dev",
   followers: 842,
 };
 
@@ -33,7 +33,7 @@ const MOCK_REPOS = [
     language: "TypeScript",
     stargazers_count: 142,
     updated_at: daysAgo(1),
-    html_url: "https://github.com/cassardp/gitgrid",
+    html_url: "https://github.com/mayarivera/gitgrid",
     homepage: "https://gitgrid.app",
     private: false,
     fork: false,
@@ -44,7 +44,7 @@ const MOCK_REPOS = [
     language: "Swift",
     stargazers_count: 89,
     updated_at: daysAgo(4),
-    html_url: "https://github.com/cassardp/slowread",
+    html_url: "https://github.com/mayarivera/slowread",
     homepage: "https://apps.apple.com/us/app/slowread/id000000",
     private: false,
     fork: false,
@@ -55,7 +55,7 @@ const MOCK_REPOS = [
     language: "TypeScript",
     stargazers_count: 2431,
     updated_at: daysAgo(3),
-    html_url: "https://github.com/cassardp/atlas-type",
+    html_url: "https://github.com/mayarivera/atlas-type",
     homepage: "https://atlas-type.dev",
     private: false,
     fork: false,
@@ -66,7 +66,7 @@ const MOCK_REPOS = [
     language: "Rust",
     stargazers_count: 894,
     updated_at: daysAgo(2),
-    html_url: "https://github.com/cassardp/cartograph",
+    html_url: "https://github.com/mayarivera/cartograph",
     homepage: "",
     private: false,
     fork: false,
@@ -77,7 +77,7 @@ const MOCK_REPOS = [
     language: "Go",
     stargazers_count: 612,
     updated_at: daysAgo(21),
-    html_url: "https://github.com/cassardp/plumb",
+    html_url: "https://github.com/mayarivera/plumb",
     homepage: "https://plumb.sh",
     private: false,
     fork: false,
@@ -88,7 +88,7 @@ const MOCK_REPOS = [
     language: "TypeScript",
     stargazers_count: 328,
     updated_at: daysAgo(5),
-    html_url: "https://github.com/cassardp/marginalia",
+    html_url: "https://github.com/mayarivera/marginalia",
     homepage: "",
     private: false,
     fork: false,
@@ -99,8 +99,8 @@ const MOCK_REPOS = [
     language: "MDX",
     stargazers_count: 189,
     updated_at: daysAgo(2),
-    html_url: "https://github.com/cassardp/fieldnotes",
-    homepage: "https://fieldnotes.cassardp.com",
+    html_url: "https://github.com/mayarivera/fieldnotes",
+    homepage: "https://fieldnotes.mayarivera.dev",
     private: false,
     fork: false,
   },
@@ -110,7 +110,7 @@ const MOCK_REPOS = [
     language: "Swift",
     stargazers_count: 1056,
     updated_at: daysAgo(62),
-    html_url: "https://github.com/cassardp/pigment",
+    html_url: "https://github.com/mayarivera/pigment",
     homepage: "",
     private: false,
     fork: false,
@@ -121,7 +121,7 @@ const MOCK_REPOS = [
     language: "CSS",
     stargazers_count: 512,
     updated_at: daysAgo(32),
-    html_url: "https://github.com/cassardp/letterpress-css",
+    html_url: "https://github.com/mayarivera/letterpress-css",
     homepage: "",
     private: false,
     fork: false,
@@ -132,7 +132,7 @@ const MOCK_REPOS = [
     language: "Shell",
     stargazers_count: 47,
     updated_at: daysAgo(1),
-    html_url: "https://github.com/cassardp/dotfiles",
+    html_url: "https://github.com/mayarivera/dotfiles",
     homepage: "",
     private: false,
     fork: false,
@@ -143,7 +143,7 @@ const MOCK_REPOS = [
     language: "Python",
     stargazers_count: 98,
     updated_at: daysAgo(180),
-    html_url: "https://github.com/cassardp/stanza",
+    html_url: "https://github.com/mayarivera/stanza",
     homepage: "",
     private: false,
     fork: false,
@@ -154,7 +154,7 @@ const MOCK_REPOS = [
     language: "JavaScript",
     stargazers_count: 0,
     updated_at: daysAgo(8),
-    html_url: "https://github.com/cassardp/private-playground",
+    html_url: "https://github.com/mayarivera/private-playground",
     homepage: "",
     private: true,
     fork: false,
@@ -165,7 +165,7 @@ const MOCK_REPOS = [
     language: "TypeScript",
     stargazers_count: 3,
     updated_at: daysAgo(6),
-    html_url: "https://github.com/cassardp/secret-launch",
+    html_url: "https://github.com/mayarivera/secret-launch",
     homepage: "https://secret-launch.dev",
     private: true,
     fork: false,

@@ -107,3 +107,9 @@
 .footer-label:hover {
   background: var(--surface);
 }
+
+.footer-stats {
+  font-size: 12px;
+  color: var(--text-4);
+  margin: 0;
+}

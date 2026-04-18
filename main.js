@@ -241,45 +241,17 @@ function renderHeader(user) {
   // Footer
   const footerText = CONFIG.footer || `© ${new Date().getFullYear()} ${name}`;
   const footerEl = document.getElementById("footer-actions");
+  const statsHTML = isOwner && !previewMode && cachedViews
+    ? `<p class="footer-stats">${cachedViews.today.toLocaleString()} visit${cachedViews.today !== 1 ? "s" : ""} today · ${cachedViews.week.toLocaleString()} this week</p>`
+    : "";
   footerEl.innerHTML = `
     <p class="footer-text">${escapeHTML(footerText)}</p>
     <a class="footer-label" href="https://gitgrid.app" target="_blank">Made with GitGrid</a>
+    ${statsHTML}
   `;
 
-  var statsOverlay = document.getElementById("stats-overlay");
-  if (isOwner && !previewMode && cachedViews) {
-    if (!statsOverlay) {
-      statsOverlay = document.createElement("div");
-      statsOverlay.id = "stats-overlay";
-      statsOverlay.classList.add("hidden");
-      document.body.appendChild(statsOverlay);
-      window.addEventListener("scroll", function () {
-        var hiddenList = document.querySelector(".hidden-list");
-        var shouldHide;
-        if (hiddenList) {
-          var hr = hiddenList.getBoundingClientRect();
-          shouldHide = hr.bottom > window.innerHeight - 120;
-        } else {
-          var footer = document.getElementById("footer-actions");
-          if (!footer) return;
-          shouldHide = footer.getBoundingClientRect().bottom > window.innerHeight;
-        }
-        var wasHidden = statsOverlay.classList.contains("hidden");
-        if (shouldHide) {
-          statsOverlay.classList.add("hidden");
-        } else if (wasHidden) {
-          statsOverlay.classList.remove("hidden");
-          statsOverlay.style.animation = "none";
-          statsOverlay.offsetHeight;
-          statsOverlay.style.animation = "";
-        }
-      }, { passive: true });
-    }
-    statsOverlay.textContent = `${cachedViews.today.toLocaleString()} visit${cachedViews.today !== 1 ? "s" : ""} today · ${cachedViews.week.toLocaleString()} this week`;
-    statsOverlay.style.display = "";
-  } else if (statsOverlay) {
-    statsOverlay.style.display = "none";
-  }
+  var oldStatsOverlay = document.getElementById("stats-overlay");
+  if (oldStatsOverlay) oldStatsOverlay.remove();
   footerEl.style.alignItems = ({ left: "flex-start", right: "flex-end" })[CONFIG.footerAlign] || "center";
   if (CONFIG.showFooter === false) footerEl.querySelector(".footer-text").style.display = "none";
 
