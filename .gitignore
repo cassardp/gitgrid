@@ -4,3 +4,4 @@ data.json
 .DS_Store
 .claude/
 gitgrid-worker/public/
+AGENTS.md
